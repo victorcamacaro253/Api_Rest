@@ -5,13 +5,13 @@ import XLSX from 'xlsx';
 class UserModel{
 
    static async getAllUsers() {
-        const SQL='SELECT `user_id`, `fullname`, `username`, `email`, `password`, `ID`, `role`, `image`, `status`,`createdAt` FROM `users`'
+        const SQL='SELECT u.user_id,u.fullname,u.username,u.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id;'
         const results = await query(SQL);
         return results;
     }
 
  static  async getUserById(id) {
-        const SQL = 'SELECT `user_id`, `fullname`, `username`, `email`, `password`, `ID`, `role`, `image`, `status`,`createdAt` FROM `users` WHERE user_id = ?';
+        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id; FROM users WHERE u.user_id = ?';
         const results = await query(SQL, [id]);
         return results;
     }
