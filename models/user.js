@@ -108,13 +108,11 @@ class UserModel{
 
     // Modelo: updateUser
     static async updateUser(id, updateFields, values) {
-
-     //construir la parte de SET para la consulta , añadiendo un signo de interrogacion para cada campo
+         //construir la parte de SET para la consulta , añadiendo un signo de interrogacion para cada campo
      const setClause= updateFields.map(field => `${field} = ? `).join(', '); 
 
     // Construir la consulta SQL
     const SQL = `UPDATE users SET ${setClause} WHERE user_id = ?`;
-
     // Añadir el ID al final de los valores
     const finalValues = values.concat(id);
 

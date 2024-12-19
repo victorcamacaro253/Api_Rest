@@ -111,39 +111,41 @@ static addUser = async (req, res) => {
 
 static update = async (req, res) => {
     const { id } = req.params;
-    const { name, apellido, cedula, email, password } = req.body;
+    const { fullname, username,email, password,personal_ID} = req.body;
 
-    if (!name && !apellido && !email && !password) {
+    if (!fullname && !username && !email && !password  && !personal_ID) {
         return res.status(400).json({ error: 'No data to update' });
     }
-
+console.log(req.body)
     try {
         let updateFields = [];
         let values = [];
 
-        if (name) {
-            updateFields.push('nombre = ?');
-            values.push(name);
+        if (fullname) {
+            updateFields.push('fullname');
+            values.push(fullname);
         }
 
-        if (apellido) {
-            updateFields.push('apellido = ?');
-            values.push(apellido);
-        }
-
-        if (cedula) {
-            updateFields.push('cedula = ?');
-            values.push(cedula);
+        if (username) {
+            updateFields.push('username ');
+            values.push(username);
         }
 
         if (email) {
-            updateFields.push('correo = ?');
+            updateFields.push('email');
             values.push(email);
         }
+
+        if (personal_ID) {
+            updateFields.push('personal_ID ');
+            values.push(personal_ID);
+        }
+
+      
         
         if (password) {
             const hashedPassword = await hash(password, 10);
-            updateFields.push('contraseña = ?');
+            updateFields.push('password');
             values.push(hashedPassword);
         }
 
@@ -151,15 +153,16 @@ static update = async (req, res) => {
             return res.status(400).json({ error: 'No data to update' });
         }
 
-        const results = await User.updateUser(id, updateFields,values);
+//        console.log(updateFields,values)
+        const results = await UserModel.updateUser(id, updateFields,values);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
 
        
-       await cacheService.deleteFromCache(`user:${id}`);
-       await cacheService.deleteFromCache('users');
+     //  await cacheService.deleteFromCache(`user:${id}`);
+      // await cacheService.deleteFromCache('users');
         
 
         res.status(200).json({ message: 'User updated succesfully' });
@@ -171,7 +174,7 @@ static update = async (req, res) => {
         }
 };
 
-// Eliminar un usuario por ID
+
 static deleteUser = async (req, res) => {
     
     const { id } = req.params;
@@ -526,42 +529,38 @@ static deleteMultiple= async (req,res)=>{
 
 
 static changeStatus = async (req, res) => {
-    //const { id } = req.params;
-    const { id,status } = req.params; 
-console.log(id,status)
+    const { id, status } = req.params; // `status` se pasa en los parámetros de la URL
+    console.log(id, status);
+
+    // Validar que el `status` sea válido
+    if (!['on', 'off'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status. Use "on" or "off"' });
+    }
+
     try {
         const user = await UserModel.getUserStatus(id);
-        
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Verifica el estado actual del usuario
-        if (user.status === 'on' && status === 'on') {
-            return res.status(400).json({ message: 'User is alerady active' });
+        // Verifica si el estado actual ya es igual al deseado
+        if (user.status === status) {
+            return res.status(400).json({ message: `User is already ${status}` });
         }
 
-        // Cambia el estado solo si el usuario está inactivo
-        if (user.status === 'off' && status === 'off') {
-            const update = await UserModel.changeStatus('off', id);
-            if (!update) {
-                return res.status(404).json({ message: `It hasn't been updated` });
-            }
-            return res.json({ message: 'It has switched to active' });
-        }
-
-        // Si el estado es inválido, se cambia a valido
-        const update = await UserModel.changeStatus('on', id);
+        // Actualiza el estado
+        const update = await UserModel.changeStatus(status, id);
         if (!update) {
-            return res.status(404).json({ message: `It hasn't been updated` });
+            return res.status(500).json({ message: 'Failed to update user status' });
         }
 
-        res.json({ message: 'Status changed successfully' });
+        // Respuesta exitosa
+        res.json({ message: `User status changed to ${status}` });
 
     } catch (error) {
-        handleError(res,error)    
+        handleError(res, error); // Manejo de errores centralizado
     }
-}
+};
 
 
 static requestPasswordReset= async (req,res)=>{
