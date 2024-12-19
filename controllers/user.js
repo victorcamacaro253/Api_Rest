@@ -23,7 +23,7 @@ static getAllUsers = async (req, res) => {
       //console.log('data from cache')
        // notificationService.getNotifications()
         return res.status(200).json(cachedUsers)
-     }
+    }
 
     const results = await UserModel.getAllUsers();
 
@@ -72,9 +72,10 @@ static getUserById = async (req, res) => {
 
 // Agregar un nuevo usuario
 static addUser = async (req, res) => {
-    const { name, apellido, cedula, email, password } = req.body;
+    console.log(req.body)
+    const { fullname, username, email,password,personal_ID,role } = req.body;
 
-    if (!name || !apellido || !email || !password) {
+    if ( !username || !email || !password) {
         return res.status(400).json({ error: 'name,apellido,email & password are required' });
     }
 
@@ -83,24 +84,24 @@ static addUser = async (req, res) => {
     }
 
   
-    try {
+       try {
 
 
-        const existingUser = await User.existingCedula(cedula)
+        const existingUser = await UserModel.existingUser(personal_ID)
 
-        if (existingUser.length > 0) {
+        if (existingUser) {
          
-            return res.status(400).json({ error: 'Usuario already exist' });
+            return res.status(400).json({ error: 'User already exist' });
         }
 
         const hashedPassword = await hash(password, 10);
-        const result = await User.addUser(name, apellido, cedula, email,hashedPassword);
+        const result = await UserModel.addUser(fullname, username, email,hashedPassword,personal_ID,role);
 
        
         await cacheService.deleteFromCache('users');
 
         
-        res.status(201).json({ id: result.insertId, name, email });
+        res.status(201).json({ id: result.insertId, fullname, email });
     } catch (error) {
 
       handleError(res,error)  
@@ -311,12 +312,12 @@ if (updates.email) {
 static getProfile = async (req, res) => {
     try {
         
-        if (!req.user || !req.user.id) {
-            return res.status(401).json({ error: 'Usuario not found' });
-        }
+       /* if (!req.user || !req.user.id) {
+            return res.status(401).json({ error: 'User not found' });
+        }*/
 
 
-        const results = await User.getPerfil();
+        const results = await UserModel.getProfile();
 
         if (results.length === 0) {
             return res.status(404).json({ error: 'Profile not found' });
@@ -333,10 +334,9 @@ static getProfile = async (req, res) => {
 
 
 static getUserProfile= async (req,res) => {
-    console.log('req.params:', req.params);
-const {id} = req.params;
+ 
+    const {id} = req.params;
     
-
     if (!id) {
         return res.status(400).json({ error: 'User ID is required' });
     }
@@ -344,7 +344,7 @@ const {id} = req.params;
     try {
                
         // Consultar el perfil del usuario en la base de datos
-        const results = await User.getUserPerfil(id);
+        const results = await UserModel.getUserProfile(id);
 
         if (results.length === 0) {
             return res.status(404).json({ error: 'Profile not found' });
@@ -352,10 +352,10 @@ const {id} = req.params;
 
         res.status(200).json(results);
 
-    } catch (error) {
+     } catch (error) {
       
         handleError(res,error)    
-    }
+     }
 
 }
 
@@ -396,7 +396,7 @@ static getUsersWithPagination = async (req,res)=>{
     const offset= (page - 1 ) * limit;
     
     try {
-        const result = await User.getUsersWithPagination(limit,offset);
+        const result = await UserModel.getUsersWithPagination(limit,offset);
         res.status(200).json(result)
 
     } catch (error) {
@@ -442,10 +442,10 @@ static bulkUsers = async (req, res) => {
     try {
 
         for (const user of users) {
-            const { name, apellido, cedula, email, password,rol } = user;
+            const { fullname, username,email, password,personal_ID,role } = user;
 
-            if (!name || !apellido || !cedula || !email || !password || !rol) {
-                errors.push({ error: 'name,apellido,cedula,email & password are required', user });
+            if (!username || !email || !password ) {
+                errors.push({ error: 'fullname,email & password are required', user });
                 continue; // Cambiado para seguir insertando otros usuarios
             }
 
@@ -454,34 +454,36 @@ static bulkUsers = async (req, res) => {
                 continue; // Cambiado para seguir insertando otros usuarios
             }
 
-            const existingUser = await User.existingCedula(cedula);
-
+console.log(personal_ID)
+            const existingUser = await UserModel.existingUser(personal_ID);
+console.log('userExist',existingUser)
             if (existingUser) {
-                errors.push({ error: 'User already exist', name });
+                errors.push({ error: 'User already exist', fullname });
                 continue; // Cambiado para seguir insertando otros usuarios
             }
 
-            const imagePath = req.files[0] ? req.files[0].filename : null; 
+           // const imagePath = req.files[0] ? req.files[0].filename : null; 
 
-            console.log(imagePath)
+           // console.log(imagePath)
 
             const hashedPassword = await hash(password, 10);
+            console.log(hashedPassword)
 
             usersToInsert.push({
-                name,
-                apellido,
-                cedula,
+                fullname,
+                username,
                 email,
                 hashedPassword,
-                rol,
-                imagen:imagePath
+                personal_ID,
+                role
+               // imagen:imagePath
             });
         }
 
         if (usersToInsert.length > 0) {
             // Llama a la función de inserción de múltiples usuarios en el modelo
-            const result = await UserModel.addMultipleUser(usersToInsert);
-            createdUsers.push(...usersToInsert.map(user => ({ name: user.nombre }))); // Solo agregar nombres
+            const result = await UserModel.bulkUsers(usersToInsert);
+            createdUsers.push(...usersToInsert.map(user => ({ name: user.fullname }))); // Solo agregar nombres
         }
 
         if (errors.length > 0) {

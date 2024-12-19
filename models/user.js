@@ -5,13 +5,14 @@ import XLSX from 'xlsx';
 class UserModel{
 
    static async getAllUsers() {
-        const SQL='SELECT `user_id`, `fullname`, `username`, `email`, `password`, `ID`, `role`, `image`, `status`,`createdAt` FROM `users`'
+        const SQL=`SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id`;
+
         const results = await query(SQL);
         return results;
     }
 
  static  async getUserById(id) {
-        const SQL = 'SELECT `user_id`, `fullname`, `username`, `email`, `password`, `ID`, `role`, `image`, `status`,`createdAt` FROM `users` WHERE user_id = ?';
+        const SQL = 'SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_idu.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id WHERE u.user_id = ?';
         const results = await query(SQL, [id]);
         return results;
     }
@@ -23,19 +24,20 @@ class UserModel{
       
           }
 
-   static async existingCedula(cedula) {
-    const SQL = `SELECT * FROM usuario WHERE cedula = ?`;
-        const results = await query(SQL,[cedula]);
-          // Si el arreglo `results` contiene al menos un resultado, retorna `true`, si no, retorna `false`
-        return results.length > 0;
+   static async existingUser(personal_ID) {
+    
+    const SQL = `SELECT * FROM users WHERE personal_ID = ?`;
+        const [results] = await query(SQL,[personal_ID]);
+        console.log('resultados',results)
+        return results;
     }
 
 
 
-   static async addUser (name, apellido, cedula, email, hashedPassword){
-    const SQL= `INSERT INTO usuario (nombre,apellido,cedula,email,password) VALUES (?,?,?,?,?)`;
+   static async addUser (fullname, username, email, hashedPassword,personal_ID,role){
+    const SQL= `INSERT INTO users (fullname,username,email,password,personal_ID,role) VALUES (?,?,?,?,?,?)`;
         const result= await query( SQL,
-            [name, apellido, cedula, email, hashedPassword] );
+            [fullname, username, email,hashedPassword,personal_ID,role] );
 
             return result;
     }
@@ -168,14 +170,14 @@ static async filterUsers(fields, values) {
     }
 
 
-static async getPerfil(){
-    const SQL=`SELECT nombre,apellido,cedula FROM usuario`
+static async getProfile(){
+    const SQL=`SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id`
     const results= await query(SQL);
     return results;
 }
 
-static async getUserPerfil(id){
-    const SQL= `SELECT * FROM usuario WHERE id = ?`
+static async getUserProfile(id){
+    const SQL= `SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE u.user_id = ?`
     const result= await query(SQL,[id])
     return result;
 }
@@ -209,24 +211,25 @@ static async getLoginHistory(nombre){
 
 static async getUsersWithPagination(limit,offset){
     try {
-        const SQL= `SELECT * FROM usuario LIMIT ? OFFSET ?`
+        const SQL= `SELECT SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id LIMIT ? OFFSET ?`
         const result= await query(SQL,[limit,offset])
         return result;
 
     } catch (error) {
-        console.error('Error al obtener usuarios con paginacion',error)
+        console.error('Server Error',error)
         throw error;
     }
 }
 
 
-   static async addMultipleUser(users){
+   static async bulkUsers(users){
        // console.log(users)
         const queries = users.map(user=>{
-            const {name,apellido,cedula,email,hashedPassword,rol,imagen} = user;
-            const SQL = `INSERT INTO usuario (nombre,apellido,cedula,email,contrasena,rol,imagen) VALUES (?,?,?,?,?,?,?)`
+            const {fullname, username,email, hashedPassword,personal_ID,role} = user;
+            console.log(personal_ID)
+            const SQL = `INSERT INTO users (fullname,username,email,password,personal_ID,role) VALUES (?,?,?,?,?,?)`
             return query(SQL,
-                [name,apellido,cedula,email,hashedPassword,rol,imagen]
+                [fullname, username,email, hashedPassword,personal_ID,role]
             )
         })  
 

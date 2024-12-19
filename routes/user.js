@@ -18,17 +18,15 @@ router.get('/',User.getAllUsers);
 router.get('/filter',User.filterUsers);
 
 //route to get user profile
-router.get('/profile',authenticateToken ,User.getProfile)
+router.get('/profile',User.getProfile)
 
 
 //Route to get user income history by name
 router.get('/loginHistory',User.getLoginHistory)
 
 
-
-
 // Route to get user profile
-router.get('/profile/:id',authenticateToken ,User.getUserProfile)
+router.get('/profile/:id' ,User.getUserProfile)
 
 
 //Route to get all users with pagination
@@ -37,7 +35,7 @@ router.get('/pagination',User.getUsersWithPagination)
 
 //Route to add a new user
 
-router.post('/',authenticateToken,User.addUser);
+router.post('/',User.addUser);
 
 
 
@@ -46,7 +44,7 @@ router.get('/:id',User.getUserById);
 
 
 //Route to insert multiple users
-router.post('/bulk',upload.array('image'),User.bulkUsers)
+router.post('/bulk',User.bulkUsers)
 
 //Route to delete multiple users
 router.post('/deleteMultiple',User.deleteMultiple)
