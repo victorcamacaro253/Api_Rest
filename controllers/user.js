@@ -510,7 +510,7 @@ static deleteMultiple= async (req,res)=>{
  try {
     const deletePromises = users.map(user=>{
         const { id } = user
-        return User.deleteUser(id)
+        return UserModel.deleteUser(id)
     })
 
     await Promise.all(deletePromises)
@@ -526,36 +526,37 @@ static deleteMultiple= async (req,res)=>{
 
 
 static changeStatus = async (req, res) => {
-    const { id } = req.params;
-    const { status } = req.params; 
+    //const { id } = req.params;
+    const { id,status } = req.params; 
 console.log(id,status)
     try {
-        const user = await User.getUserStatus(id);
+        const user = await UserModel.getUserStatus(id);
+        
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
         // Verifica el estado actual del usuario
-        if (user.estatus === 'activo' && status === 'activo') {
+        if (user.status === 'on' && status === 'on') {
             return res.status(400).json({ message: 'User is alerady active' });
         }
 
         // Cambia el estado solo si el usuario está inactivo
-        if (user.estatus === 'inactivo' && status === 'activo') {
-            const update = await User.changeStatus('activo', id);
+        if (user.status === 'off' && status === 'off') {
+            const update = await UserModel.changeStatus('off', id);
             if (!update) {
                 return res.status(404).json({ message: `It hasn't been updated` });
             }
             return res.json({ message: 'It has switched to active' });
         }
 
-        // Si el estado es inválido, se cambia a inválido
-        const update = await User.changeStatus('inactivo', id);
+        // Si el estado es inválido, se cambia a valido
+        const update = await UserModel.changeStatus('on', id);
         if (!update) {
             return res.status(404).json({ message: `It hasn't been updated` });
         }
 
-        res.json({ message: 'Status chnaged successfully' });
+        res.json({ message: 'Status changed successfully' });
 
     } catch (error) {
         handleError(res,error)    
@@ -566,7 +567,7 @@ console.log(id,status)
 static requestPasswordReset= async (req,res)=>{
   const { email }= req.body;
 
-  const user = User.findByEmail(email)
+  const user = UserModel.findByEmail(email)
 
   if(!user){
     return res.status(404).send('email not found')
@@ -602,7 +603,7 @@ static resetPassword= async (req,res)=>{
         }
         const hashedPassword = await hash(newPassword, 10);
 
-        await User.updateUserPassword(userId,hashedPassword)
+        await UserModel.updateUserPassword(userId,hashedPassword)
 
        return res.status(200).json({ message: 'Password has been reset successfully' });
         

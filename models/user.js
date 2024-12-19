@@ -1,6 +1,4 @@
 import { query,pool } from '../db/db.js';
-import bcrypt from 'bcrypt';
-import XLSX from 'xlsx';
 
 class UserModel{
 
@@ -52,13 +50,13 @@ class UserModel{
 
 
   static  async addUserGoogle({ google_id, nombre, correo, imagen }) {
-    const SQL = `INSERT INTO usuario (google_id, nombre, correo, imagen) VALUES (?,?,?,?)`;
+    const SQL = `INSERT INTO users (google_id, nombre, correo, imagen) VALUES (?,?,?,?)`;
         const result = await query(SQL,
             [google_id, nombre, correo, imagen]
         );
     
      // Ahora, busca el usuario insertado usando su ID
-     const SQL2='SELECT * FROM usuario WHERE id = ?';
+     const SQL2='SELECT * FROM users WHERE id = ?';
   const insertedUser = await query(SQL2, [result.insertId]);
     
   return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
@@ -67,26 +65,26 @@ class UserModel{
 
 
    static async addUserFacebook({ facebook_id, nombre, correo, imagen }) {
-    const SQL='INSERT INTO usuario (facebook_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)'
+    const SQL='INSERT INTO users (facebook_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)'
         const result = await query(SQL,
             [facebook_id, nombre, correo, imagen]
         );
     
      // Ahora, busca el usuario insertado usando su ID
-     const SQL2='SELECT * FROM usuario WHERE id = ?';
+     const SQL2='SELECT * FROM users WHERE user_id = ?';
   const insertedUser = await query(SQL2, [result.insertId]);
     
   return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
     }
 
    static async addUserGithub({ github_id, nombre, correo, imagen }) {
-    const SQL='INSERT INTO usuario (github_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)'
+    const SQL='INSERT INTO users (github_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)'
         const result = await query(SQL,
             [github_id, nombre, correo, imagen]
         );
     
      // Ahora, busca el usuario insertado usando su ID
-     const SQL2='SELECT * FROM usuario WHERE id = ?';
+     const SQL2='SELECT * FROM users WHERE user_id = ?';
      const insertedUser = await query(SQL2, [result.insertId]);
     
      return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
@@ -94,13 +92,13 @@ class UserModel{
 
     
    static async addUserTwitter({ twitter_id, nombre, correo, imagen }) {
-        const SQL=`INSERT INTO usuario (twitter_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)`
+        const SQL=`INSERT INTO users (twitter_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)`
         const result = await query(SQL,
             [twitter_id, nombre, correo, imagen]
         );
     
      // Ahora, busca el usuario insertado usando su ID
-      const SQL2=`SELECT * FROM usuario WHERE id = ?`
+      const SQL2=`SELECT * FROM users WHERE user_id = ?`
       const insertedUser = await _query(SQL2, [result.insertId]);
     
       return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
@@ -115,7 +113,7 @@ class UserModel{
      const setClause= updateFields.map(field => `${field} = ? `).join(', '); 
 
     // Construir la consulta SQL
-    const SQL = `UPDATE usuario SET ${setClause} WHERE id = ?`;
+    const SQL = `UPDATE users SET ${setClause} WHERE user_id = ?`;
 
     // Añadir el ID al final de los valores
     const finalValues = values.concat(id);
@@ -128,7 +126,7 @@ class UserModel{
 
 static async updatePartialUser(updateFields,values){
   // Construir la consulta SQL
-  const SQL = `UPDATE usuario SET ${updateFields.join(', ')} WHERE id = ?`;
+  const SQL = `UPDATE users SET ${updateFields.join(', ')} WHERE user_id = ?`;
   const result = await query(SQL, values);
   return result
 }
@@ -159,7 +157,7 @@ static async filterUsers(fields, values) {
 
 
    static async deleteUser(id) {
-    const SQL= `DELETE FROM usuario WHERE id = ?`
+    const SQL= `DELETE FROM users WHERE user_id = ?`
         const result = await query(SQL, [id]);
         return result.affectedRows;
     }
@@ -171,8 +169,8 @@ static async filterUsers(fields, values) {
     }
 
 
-    static async findByEmail(email) {
-        const SQL = `SELECT * FROM usuario WHERE email = ?`
+    static async GetUserByEmail(email) {
+        const SQL = `SELECT * FROM users WHERE email = ?`
         const results = await query(SQL, [email]);
         return results;
     }
@@ -190,20 +188,6 @@ static async getUserProfile(id){
     return result;
 }
 
-/*
-async getLoginHistory(id){
-    
-    try{
-
-        const result= await _query('SELECT * FROM  hsitorial_ingresos WHERE id=?',[id]);
-        return result;
-    
-    }catch(error){
-    console.error('Error',error);
-    throw error;
-    }
-}
-*/
 
 static async getLoginHistory(nombre){
     try {
@@ -219,7 +203,7 @@ static async getLoginHistory(nombre){
 
 static async getUsersWithPagination(limit,offset){
     try {
-        const SQL= `SELECT SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id LIMIT ? OFFSET ?`
+        const SQL= `SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id LIMIT ? OFFSET ?`
         const result= await query(SQL,[limit,offset])
         return result;
 
@@ -248,33 +232,33 @@ static async getUsersWithPagination(limit,offset){
 
 
    static async findUserByGoogleId(googleId) {
-        const SQL = 'SELECT * FROM usuario WHERE google_id = ?';
+        const SQL = 'SELECT u.user_id,u.google_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE google_id = ?';
         const [rows] = await query(SQL, [googleId]);
         return rows;
     }
 
    static async findUserByFacebookId(facebookId) {
-        const SQL = 'SELECT * FROM usuario WHERE google_id = ?';
+        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE google_id = ?';
         const [rows] = await query(SQL, [facebookId]);
         return rows;
     }
 
    static async findUserByGithubId(githubId) {
-        const SQL = 'SELECT * FROM usuario WHERE github_id = ?';
+        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE github_id = ?';
         const [rows] = await query(SQL, [githubId]);
         return rows;
     }
 
 
    static async findUserByTwitterId(twitterId) {
-        const SQL = 'SELECT * FROM usuario WHERE twitter_id = ?';
+        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE twitter_id = ?';
         const [rows] = await query(SQL, [twitterId]);
         return rows;
     }
 
 
    static async changeStatus(status,id){
-    const SQL = 'UPDATE usuario SET status = ? WHERE id = ?'
+    const SQL = 'UPDATE users SET status = ? WHERE user_id = ?'
         const result = await query(SQL,[status,id])
         return result
      }
@@ -282,8 +266,8 @@ static async getUsersWithPagination(limit,offset){
 
 
    static  async getUserStatus(id){
-        const sql = "SELECT estatus FROM usuario WHERE id= ?"
-        const [result]= await _query(sql,[id])
+        const sql = "SELECT status FROM users WHERE user_id= ?"
+        const [result]= await query(sql,[id])
         return result 
      }
     
