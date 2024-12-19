@@ -454,9 +454,8 @@ static bulkUsers = async (req, res) => {
                 continue; // Cambiado para seguir insertando otros usuarios
             }
 
-console.log(personal_ID)
             const existingUser = await UserModel.existingUser(personal_ID);
-console.log('userExist',existingUser)
+
             if (existingUser) {
                 errors.push({ error: 'User already exist', fullname });
                 continue; // Cambiado para seguir insertando otros usuarios
