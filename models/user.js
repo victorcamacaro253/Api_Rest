@@ -5,20 +5,20 @@ import XLSX from 'xlsx';
 class UserModel{
 
    static async getAllUsers() {
-        const SQL=`SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id`;
-
+        const SQL='SELECT u.user_id,u.fullname,u.username,u.national_ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id'
         const results = await query(SQL);
         return results;
     }
 
  static  async getUserById(id) {
+
         const SQL = 'SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_idu.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id WHERE u.user_id = ?';
         const results = await query(SQL, [id]);
         return results;
     }
 
-   static async getUserByNombre(nombre){
-        const SQL = `SELECT * FROM usuario WHERE nombre = ?`;
+   static async getUserByUsername(username){
+        const SQL = `SELECT  u.user_id,u.fullname,u.username,u.national_.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id FROM users WHERE u.username = ?`;
         const result= await query(SQL,[nombre]);
         return result;
       
@@ -30,6 +30,14 @@ class UserModel{
         const [results] = await query(SQL,[personal_ID]);
         console.log('resultados',results)
         return results;
+    }
+
+   static async getUserByNationalID(ID) {
+    const SQL = `SELECT  u.user_id,u.fullname,u.username,u.national_.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id FROM users WHERE u.national_ID = ?`;
+        const results = await query(SQL,[ID]);
+          // Si el arreglo `results` contiene al menos un resultado, retorna `true`, si no, retorna `false`
+        return results.length > 0;
+
     }
 
 
