@@ -111,19 +111,19 @@ class UserModel{
          //construir la parte de SET para la consulta , añadiendo un signo de interrogacion para cada campo
      const setClause= updateFields.map(field => `${field} = ? `).join(', '); 
 
-    // Construir la consulta SQL
+
     const SQL = `UPDATE users SET ${setClause} WHERE user_id = ?`;
-    // Añadir el ID al final de los valores
+  
     const finalValues = values.concat(id);
 
-    // Ejecutar la consulta
+   
     const results = await query(SQL, finalValues);
 
     return results; // Retornar el resultado de la consulta
 }
 
 static async updatePartialUser(updateFields,values){
-  // Construir la consulta SQL
+  
   const SQL = `UPDATE users SET ${updateFields.join(', ')} WHERE user_id = ?`;
   const result = await query(SQL, values);
   return result
@@ -146,7 +146,7 @@ static async filterUsers(fields, values) {
 
         return rows;
     } catch (error) {
-        console.error('Error ejecutando la consulta dinámica:', error);
+        console.error('Error executing query ');
         throw error;
     }
 }
@@ -213,7 +213,7 @@ static async getUsersWithPagination(limit,offset){
 
 
    static async bulkUsers(users){
-       // console.log(users)
+      
         const queries = users.map(user=>{
             const {fullname, username,email, hashedPassword,personal_ID,role} = user;
             console.log(personal_ID)

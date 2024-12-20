@@ -1,5 +1,5 @@
 import apiKeyModel from "../models/apiKeyModel.js";
-import { hash, compare } from 'bcrypt';
+import {  compare } from 'bcrypt';
 
 
 const validateApiKey = async  (req,res,next)=>{
