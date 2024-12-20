@@ -180,7 +180,7 @@ static deleteUser = async (req, res) => {
     const { id } = req.params;
   
     try {
-        const result = await User.deleteUser(id);
+        const result = await UserModel.deleteUser(id);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'User not found' });
@@ -192,7 +192,7 @@ static deleteUser = async (req, res) => {
    await cacheService.deleteFromCache('users');
         
 
-        res.status(200).json({ message: 'Usuario deleted succesfully' });
+        res.status(200).json({ message: 'User deleted succesfully' });
     } catch (error) {
         handleError(res,error)    
     }
@@ -211,7 +211,7 @@ static partialUpdate = async (req, res) => {
 
     try {
         // Verificar si el usuario existe
-        const userResults = await User.getUserById(id)
+        const userResults = await UserModel.getUserById(id)
         if (userResults.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -220,30 +220,25 @@ static partialUpdate = async (req, res) => {
         let values = [];
 
         // Solo actualizar los campos proporcionados
-        if (updates.name) {
-            updateFields.push('nombre = ?');
-            values.push(updates.name);
+        if (updates.fullname) {
+            updateFields.push('fullname');
+            values.push(updates.fullname);
         }
         if (updates.email) {
-            updateFields.push('correo = ?');
+            updateFields.push('username');
+            values.push(updates.username);
+        }
+
+        if (updates.email) {
+            updateFields.push('email');
             values.push(updates.email);
         }
 
-        if (updates.cedula) {
-            updateFields.push('correo = ?');
-            values.push(updates.cedula);
+        if (updates.personal_ID) {
+            updateFields.push('personal_ID');
+            values.push(updates.personal_ID);
         }
 
-        if (updates.apellido) {
-            updateFields.push('apellido = ?');
-            values.push(updates.apellido);
-        }
-
-        if (updates.password) {
-            const hashedPassword = await hash(updates.password, 10);
-            updateFields.push('contraseña = ?');
-            values.push(hashedPassword);
-        }
 
         // Añadir el ID al final de los valores
         values.push(id);
@@ -253,7 +248,7 @@ static partialUpdate = async (req, res) => {
         }
 
         
-        const result = await User.updatePartialUser(updateFields,values)
+        const result = await UserModel.updatePartialUser(updateFields,values)
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -269,24 +264,20 @@ static partialUpdate = async (req, res) => {
 static filterUsers = async (req, res) => {
     console.log(req.query)
     const updates = req.query;
-
-
-    
-
     try {
 
         
         let Fields = [];
         let values = [];
 
-   // Solo actualizar los campos proporcionados
+   // Only update field provided
    if (updates.fullname) {
     Fields.push('fullname');
     values.push(updates.fullname);
 }
-if (updates.ID) {
-    Fields.push('ID');
-    values.push(updates.ID);
+if (updates.personal_ID) {
+    Fields.push('personal_ID');
+    values.push(updates.personal_ID);
 }
 
 if (updates.username) {
@@ -306,7 +297,7 @@ if (updates.email) {
         res.status(200).json({results});
         
     } catch (error) {
-        console.error('Error ejecutando la consulta', error);
+       
         handleError(res,error)    
     }
 };
@@ -370,7 +361,7 @@ static getLoginHistory = async (req,res)=>{
        // const result= await UserModel.getLoginHistory(id)
 
 
-       const result= await User.getLoginHistory(nombre);
+       const result= await UserModel.getLoginHistory(nombre);
 
            // Verifica si se encontró el usuario
            if (!result) {

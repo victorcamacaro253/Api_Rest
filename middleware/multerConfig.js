@@ -2,7 +2,6 @@ import multer from "multer";
 import path  from "path";
 
 
-//configuracion del almacenamiento
 
 const storage= multer.diskStorage({
     destination: (req,file,cb)=>{
