@@ -19,7 +19,7 @@ router.get("/page", Product.getPaginatedProducts);
 // Route to get products by category
 router.get("/category/:categoryId", Product.getProductsByCategory);
 
-
+router.get("/product/:name",Product.getProductByName);
 
 // Route to get product by id
 router.get("/:id", Product.getProductById);
@@ -27,15 +27,18 @@ router.get("/:id", Product.getProductById);
 //Route to get the top selling products
 router.get('/top-selling', Product.getTopSellingProducts);
 
+//Route to get the products stock
+router.get("/stock",Product.checkStock);
+
 // Route to check product stock availability
-router.get("/:id/stock", Product.checkStock);
+router.get("/:id/stock", Product.getProductStock);
 
 
 //Route to update product
 router.put("/:id", Product.updateProduct);
 
 // Route to update stock for a product
-router.put("/:id/stock", Product.updateStock);
+router.put("/:id/stock", Product.updateProductStock);
 
 
 //Routet to add a new product to the database
@@ -48,6 +51,6 @@ router.post("/bulk", Product.bulkProducts);
 router.post("/delete", Product.deleteMultiple);
 
 //Route to delete a product by id
-router.delete("/:id", Product.deleteProduct);
+router.delete("/:id", Product.delete);
 
 export default router;
