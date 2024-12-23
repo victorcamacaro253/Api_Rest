@@ -72,24 +72,26 @@ static async getAllProducts(req,res) {
 
     try {
 
-        const fieldsToCheck= [
-            {field: 'name', value: name},
-            {field: 'category', value: category},
-            {field: 'price', value: priceNum}
-        ]
-
-
         const fields= []
         const values = []
 
 
-        for(const {field,value} of fieldsToCheck) {
-            if(value !== undefined && value !== null) {
-                fields.push(field);
-                values.push(value);
-            }
+        if (name) {
+            fields.push('name');
+            values.push(name);
         }
 
+        if (category) {
+            fields.push('category ');
+            values.push(category);
+        }
+
+        if (price) {
+            fields.push('price');
+            values.push(priceNum);
+        }
+
+      
         // If no fields are valid, return an error
         if (fields.length === 0) {
             return res.status(400).json({ error: 'No hay datos para actualizar' });
@@ -97,7 +99,7 @@ static async getAllProducts(req,res) {
 
         const products = await ProductModel.getProductsByFilter(fields, values);
 
-        if (results.length > 0) {
+        if (products.length < 0) {
             return res.status(404).json({ error: 'Producto no encontrado' });
         }
 
@@ -133,7 +135,7 @@ static async getAllProducts(req,res) {
 
 
  static async getPaginatedProducts(req,res) {
-    const { page, limit } = req.query;
+    const { page=1, limit=10 } = req.query;
 
     const offset = (page - 1) * limit;
 
@@ -299,17 +301,23 @@ static async checkStock(req,res) {
             return res.status(400).json({ error: 'Price must be a positive number' });
         }
 
-        const code = crypto.randomBytes(8).toString('hex').toUpperCase();
+    
+        const status = 'active';
+     
     
         try {
+            console.log(name)
             const existingProduct = await ProductModel.getProductByName(name);
-            if (existingProduct) {
+            console.log(existingProduct)
+            if (existingProduct.length > 0) {
                 return res.status(400).json({ error: 'Product already exists' });
             }
 
          //const imagePath = image ? image.path : null;
+         
+        const code = crypto.randomBytes(8).toString('hex').toUpperCase();
 
-         const result = await ProductModel.addProduct(name, description, priceNum, category, code);
+         const result = await ProductModel.addProduct(code,name, description, priceNum, category,status);
 
          const addStock = await ProductModel.addProductStock(result.insertId,stock,supplier);
 
@@ -323,16 +331,19 @@ static async checkStock(req,res) {
     }
 
     static async bulkProducts(req,res) {
-        let products
-        try {
-            products= JSON.parse(req.body.products || '[]');
-            
-        } catch (error) {
-            return res.status(400).json({ error: 'Invalid products' });
-
-        }
-
-        const imagePath = req.files && req.files.length > 0 ? `/uploads/${req.files[0].filename}` : null;
+    let products;
+    if (typeof req.body.products === 'string') {
+      
+       try {
+           products = JSON.parse(req.body.products || '[]');
+       } catch (error) {
+           return res.status(400).json({ error: 'Invalid JSON format for products' });
+       }
+   } else {
+      
+       products = req.body.products || [];
+   }
+      //  const imagePath = req.files && req.files.length > 0 ? `/uploads/${req.files[0].filename}` : null;
 
         if(!Array.isArray(products) || products.length === 0) {
             return res.status(400).json({ error: 'products must be an array' });
@@ -349,7 +360,9 @@ static async checkStock(req,res) {
                     description,
                     price,
                     category,
-                    status= "active"
+                    status= "active",
+                    stock, 
+                    supplier
                 }= product
 
                 if (!name || !description || !price || !category) {
@@ -357,7 +370,7 @@ static async checkStock(req,res) {
                     continue;
                 }
 
-                priceNum = parseFloat(price);
+                const priceNum = parseFloat(price);
 
                 if (isNaN(priceNum) || !Number.isFinite(priceNum) || priceNum < 0) {
                     errors.push({ product, error: 'Price must be a positive number' });
@@ -367,19 +380,35 @@ static async checkStock(req,res) {
                 const code = crypto.randomBytes(8).toString('hex').toUpperCase();
 
                 const existingProduct = await ProductModel.getProductByName(name);
-                if(existingProduct) {
+                if(existingProduct.length > 0) {
                     errors.push({ error: 'Product already exists',name });
                     continue;
                 }
 
-                productsToInsert.push([name, description, priceNum, category, code, status]);
+                productsToInsert.push({name, description, priceNum, category, code, status, stock,supplier});
             }
 
-           const result = await ProductModel.bulkProducts(productsToInsert);
+          // Call the bulk insert method and get the insertIds
+        const insertIds = await ProductModel.bulkProducts(productsToInsert);
+        
+        // Prepare the response with the created product IDs
+        insertIds.forEach((id, index) => {
+            createdProducts.push({ message: "Product added successfully", id });
+        });
 
-           createdProducts.push({id: result.insertId, name});
+         
+         // Insert stock for each product
+         for (let i = 0; i < insertIds.length; i++) {
+            const productId = insertIds[i];
+            const stockQuantity = productsToInsert[i].stock; // Get the stock quantity from the original product data
+            const supplier = productsToInsert[i].supplier; // Get the supplier from the original product data
 
-           if (errors.length > 0) {
+            await ProductModel.addProductStock(productId, stockQuantity, supplier);
+        }
+      //  await StockModel.bulkInsertStock(stockEntries); // Assuming you have a method to bulk insert stock
+
+
+           if(errors.length > 0) {
             res.status(400).json({ errors });
         } else {
             res.status(201).json({ createdProducts });

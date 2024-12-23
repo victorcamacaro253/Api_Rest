@@ -20,31 +20,40 @@ class ProductModel{
         return result;
     }
 
-    static async updateProduct(id, updateFields,values){
-     const setClause = updateFields.map(field => `${field} = ?`).join(', ');
 
-     const SQL= `UPDATE products SET ${setClause} WHERE product_id = ?`;
+        static async updateProduct(productId, updateFields, values) {
+            try {
+              
+                if (updateFields.length === 0) {
+                    throw new Error('No fields to update');
+                }
 
-     const finalValues = values.concat(id);
+                const SQL = ` UPDATE products SET ${updateFields.join(', ')}  WHERE product_id = ?  `;
+    
+                // Agrega el `productId` al final de los valores
+                values.push(productId);
+    
+                // Ejecuta la consulta
+                const result = await query(SQL, values);
+    
+                // Verifica si el producto fue actualizado
+                if (result.affectedRows === 0) {
+                    return null; // Producto no encontrado
+                }
+    
+                // Devuelve el producto actualizado
+                return { message: 'Product updated successfully' };
+            } catch (error) {
+                throw error; // Lanza el error para que el controlador lo maneje
+            }
+        }
 
-     const result = await query(SQL, finalValues);
-
-     return result
-    }
-
-/*
-    static async addProduct({name, price, category, stock}){
-        const SQL='INSERT INTO products (name, price, category, stock) VALUES (?, ?, ?, ?)';
-        const result = await query(SQL, [name, price, category, stock]);
-        const SQL2='SELECT * FROM products WHERE product_id = ?';
-        const insertedProduct = await query(SQL2, [result.insertId]);
-        return insertedProduct[0];
-    }
-        */
 
     static async getProductsByFilter(fields,values){
         const setClause = fields.map(field => `${field} = ?`).join(' AND ');
         const SQL = `SELECT * FROM products WHERE ${setClause}`;
+        console.log(SQL);
+        console.log(values);
         const result = await query(SQL, values);
         return result;
 
@@ -58,6 +67,7 @@ class ProductModel{
 
     static async getPaginatedProducts(offset, limit){
         const SQL = `SELECT * FROM products LIMIT ? OFFSET ?`;
+        console.log(SQL);
         const result = await query(SQL, [limit, offset]);
         return result;
         }
@@ -70,7 +80,7 @@ class ProductModel{
 
 
     static async getTopSellingProducts(){
-        const SQL = 'SELECT * FROM most_sold_products ORDER BY total_sold DESC';
+        const SQL = 'SELECT p.name AS Product_name, p.price as Unit_price,ms.total_sold FROM most_sold_products ms JOIN products p ON ms.product_id=p.product_id ORDER BY ms.total_sold DESC';
         const result = await query(SQL);
         return result;
     }
@@ -82,7 +92,7 @@ class ProductModel{
     }
 
     static async checkStock(){
-        const SQL = 'SELECT * FROM stock';
+        const SQL = 'SELECT p.name,s.stock FROM stock s JOIN products p ON s.product=p.product_id; ';
         const result = await query(SQL);
         return result;
     }
@@ -93,12 +103,49 @@ class ProductModel{
         return results;
     }
 
-
-    static async addProductStock(productId,stock,supplier){
-        const SQL = 'INSERT INTO stock (product,stock,status,suplier) VALUES (?,?,active,?)';
-        const results = await query(SQL,[productId,stock,supplier]);
+  static async addProduct(code, name, description,price,category, status ) {
+    console.log(code)
+        const results = await query(
+            'INSERT INTO products (code, name, description,price,category_id,status) VALUES (?, ?, ?, ?, ?, ?)',
+            [code, name, description,price,category, status]
+        );
         return results;
     }
+
+    static async addProductStock(productId,stock,supplier){
+        const status='active';
+        const SQL = 'INSERT INTO stock (product,stock,status,supplier) VALUES (?,?,?,?)';
+        const results = await query(SQL,[productId,stock,status,supplier]);
+        return results;
+    }
+
+    static async bulkProducts(products){
+        const queries = products.map((product)=>{
+            const {code,name,description,priceNum,category,status} = product;
+
+            const SQL = 'INSERT INTO products (code,name,description,price,category_id,status) VALUES (?,?,?,?,?,?)';
+            return query(SQL,[code,name,description,priceNum,category,status]);
+    })
+
+    const results = await Promise.all(queries);
+      
+    // Map the results to get the insertId for each product
+    const insertIds = results.map(result => result.insertId);
+    return insertIds; // Return the array of insertIds
+    }
+
+    static async bulkProductsStock(products){
+        const queries = products.map((product)=>{
+            const {productId,stock,supplier} = product;
+            const status='active';
+            const SQL = 'INSERT INTO stock (product,stock,status,supplier) VALUES (?,?,?,?)';
+            return query(SQL,[productId,stock,status,supplier]);
+            })
+            const results = await Promise.all(queries);
+            return results;
+            }
+
 }
+
 
 export default ProductModel;

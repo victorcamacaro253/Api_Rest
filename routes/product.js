@@ -21,21 +21,24 @@ router.get("/category/:categoryId", Product.getProductsByCategory);
 
 router.get("/product/:name",Product.getProductByName);
 
-// Route to get product by id
-router.get("/:id", Product.getProductById);
-
 //Route to get the top selling products
 router.get('/top-selling', Product.getTopSellingProducts);
 
+
 //Route to get the products stock
 router.get("/stock",Product.checkStock);
+
+// Route to get product by id
+router.get("/:id", Product.getProductById);
+
+
 
 // Route to check product stock availability
 router.get("/:id/stock", Product.getProductStock);
 
 
 //Route to update product
-router.put("/:id", Product.updateProduct);
+router.put("/:productId", Product.updateProduct);
 
 // Route to update stock for a product
 router.put("/:id/stock", Product.updateProductStock);
