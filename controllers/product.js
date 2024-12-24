@@ -331,6 +331,7 @@ static async checkStock(req,res) {
     }
 
     static async bulkProducts(req,res) {
+        console.log(req.body.products)
     let products;
     if (typeof req.body.products === 'string') {
       
@@ -343,7 +344,7 @@ static async checkStock(req,res) {
       
        products = req.body.products || [];
    }
-      //  const imagePath = req.files && req.files.length > 0 ? `/uploads/${req.files[0].filename}` : null;
+        const imagePath = req.files && req.files.length > 0 ? `/uploads/${req.files[0].filename}` : null;
 
         if(!Array.isArray(products) || products.length === 0) {
             return res.status(400).json({ error: 'products must be an array' });
@@ -385,7 +386,7 @@ static async checkStock(req,res) {
                     continue;
                 }
 
-                productsToInsert.push({name, description, priceNum, category, code, status, stock,supplier});
+                productsToInsert.push({name, description, priceNum, category, code, status, stock,supplier,imagePath:imagePath || ''});
             }
 
           // Call the bulk insert method and get the insertIds

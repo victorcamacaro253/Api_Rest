@@ -121,10 +121,10 @@ class ProductModel{
 
     static async bulkProducts(products){
         const queries = products.map((product)=>{
-            const {code,name,description,priceNum,category,status} = product;
+            const {code,name,description,priceNum,category,imagePath,status} = product;
 
-            const SQL = 'INSERT INTO products (code,name,description,price,category_id,status) VALUES (?,?,?,?,?,?)';
-            return query(SQL,[code,name,description,priceNum,category,status]);
+            const SQL = 'INSERT INTO products (code,name,description,price,category_id,image,status) VALUES (?,?,?,?,?,?,?)';
+            return query(SQL,[code,name,description,priceNum,category,imagePath,status]);
     })
 
     const results = await Promise.all(queries);

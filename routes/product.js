@@ -48,7 +48,7 @@ router.put("/:id/stock", Product.updateProductStock);
 router.post("/", Product.addProduct);
 
 //Route to insert multiple products
-router.post("/bulk", Product.bulkProducts);
+router.post("/bulk",upload.array('image'),Product.bulkProducts);
 
 //Route to delete multiple products
 router.post("/delete", Product.deleteMultiple);
