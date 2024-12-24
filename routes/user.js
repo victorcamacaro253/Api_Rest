@@ -44,7 +44,7 @@ router.get('/:id',User.getUserById);
 
 
 //Route to insert multiple users
-router.post('/bulk',User.bulkUsers)
+router.post('/bulk',authenticateToken,upload.array('image'),User.bulkUsers)
 
 //Route to delete multiple users
 router.post('/deleteMultiple',User.deleteMultiple)
@@ -54,6 +54,9 @@ router.post('/requestPasswordReset',User.requestPasswordReset)
 
 //Route to reset the password 
 router.post('/resetPassword/:token',User.resetPassword)
+
+//Route to login
+router.post('/login',User.login)
 
 //Route to update user
 

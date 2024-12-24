@@ -31,10 +31,17 @@ class UserModel{
     }
 
    static async getUserByNationalID(ID) {
-    const SQL = `SELECT  u.user_id,u.fullname,u.username,u.national_.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id FROM users WHERE u.national_ID = ?`;
+    const SQL = `SELECT  u.user_id,u.fullname,u.username,u.national_.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id  WHERE u.national_ID = ?`;
         const results = await query(SQL,[ID]);
           // Si el arreglo `results` contiene al menos un resultado, retorna `true`, si no, retorna `false`
         return results.length > 0;
+
+    }
+
+    static async getUserByEmail(email) {
+        const SQL = `SELECT  u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.password,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id  WHERE u.email = ?`;
+        const [results] = await query(SQL, [email]);
+        return results;
 
     }
 
@@ -215,11 +222,11 @@ static async getUsersWithPagination(limit,offset){
    static async bulkUsers(users){
       
         const queries = users.map(user=>{
-            const {fullname, username,email, hashedPassword,personal_ID,role} = user;
+            const {fullname, username,email, hashedPassword,personal_ID,role,image} = user;
             console.log(personal_ID)
-            const SQL = `INSERT INTO users (fullname,username,email,password,personal_ID,role) VALUES (?,?,?,?,?,?)`
+            const SQL = `INSERT INTO users (fullname,username,email,password,personal_ID,role,image) VALUES (?,?,?,?,?,?,?)`
             return query(SQL,
-                [fullname, username,email, hashedPassword,personal_ID,role]
+                [fullname, username,email, hashedPassword,personal_ID,role,image]
             )
         })  
 

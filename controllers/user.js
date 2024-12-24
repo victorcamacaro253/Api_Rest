@@ -424,7 +424,7 @@ static bulkUsers = async (req, res) => {
        users = req.body.users || [];
    }
 
-   // const imagePath = req.files && req.files.length > 0 ? `/uploads/${req.files[0].filename}` : null;
+   const imagePath = req.files && req.files.length > 0 ? `/uploads/${req.files[0].filename}` : null;
 
     console.log(users);
 
@@ -459,9 +459,9 @@ static bulkUsers = async (req, res) => {
                 continue; // Cambiado para seguir insertando otros usuarios
             }
 
-           // const imagePath = req.files[0] ? req.files[0].filename : null; 
+          //  const imagePath = req.files[0] ? req.files[0].filename : null; 
 
-           // console.log(imagePath)
+            console.log(imagePath)
 
             const hashedPassword = await hash(password, 10);
             console.log(hashedPassword)
@@ -472,8 +472,8 @@ static bulkUsers = async (req, res) => {
                 email,
                 hashedPassword,
                 personal_ID,
-                role
-               // imagen:imagePath
+                role,
+               image:imagePath
             });
         }
 
@@ -605,6 +605,21 @@ static resetPassword= async (req,res)=>{
         res.status(500).json({ message: 'Error resetting password', error: error.message });    
     }
 }
+
+static async login(req,res){
+    const { email, password } = req.body;
+    const user = await UserModel.getUserByEmail(email);
+    if (!user) {
+        return res.status(404).json({ message: 'Email not found' });
+        }
+        console.log(user)
+        const isValidPassword = await compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ message: 'Invalid password' });
+            }
+            const token = tokenService.generateToken(user.id,user.correo,user.rol,'1h')
+            res.json({ token });
+            }
 
 
 }
