@@ -222,6 +222,12 @@ static async getPurchasesByPriceRange(min,max){
         return result;
     }
 
+    
+    static async getPurchaseStatsDateRange(startDate,endDate){
+        const SQL = `SELECT  * FROM purchases WHERE date BETWEEN ? AND ?`;
+        const result = await query(SQL[startDate,endDate]);
+        return result;
+    }
 
 }
 export default PurchaseModel;

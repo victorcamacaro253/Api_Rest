@@ -434,33 +434,30 @@ class Purchase {
                                                 return res.status(400).json({ error: 'Date is required' });
                                             }
                                             try {
-                                                const purchase = await purchaseModel.getPurchaseStadisticsByDate(startDate,endDate);
-                                                const total_purchases = purchase.length;
-                                                const total_purchases_amount = purchase.reduce((acc, purchase) => acc + purchase.amount, 0);
-                                                const total_purchases_quantity = purchase.reduce((acc, purchase) => acc + purchase.quantity, 0);
+                                                const purchase = await PurchaseModel.getPurchasesByDateRange(startDate,endDate);
+                                               const purchaseStats = await PurchaseModel.getPurchaseStatsDateRange(startDate,endDate);
+                                          
+                                                const total_purchases = purchaseStats.length;
+                                                const total_purchases_amount = purchaseStats.reduce((acc, purchase) => acc + parseFloat(purchase.amount), 0);
                                                 const average_purchase_amount = total_purchases_amount / total_purchases;
-                                                const average_purchase_quantity = total_purchases_quantity / total_purchases;
                                                 const min_purchase_amount = Math.min(...purchase.map(purchase => purchase.amount));
                                                 const max_purchase_amount = Math.max(...purchase.map(purchase => purchase.amount));
-                                                const first_purchase = purchase[0];
-                                                const last_purchase = purchase[purchase.length - 1];
-
+                                                const first_purchase = purchaseStats[0];
+                                                const last_purchase = purchaseStats[purchaseStats.length - 1];
+    
                                                 res.json({
                                                     total_purchases,
                                                     total_purchases_amount,
-                                                    total_purchases_quantity,
                                                     average_purchase_amount,
-                                                    average_purchase_quantity,
                                                     min_purchase_amount,
                                                     max_purchase_amount,
                                                     first_purchase,
                                                     last_purchase
-                                                });
-
-                                                
+                                                    });
+    
+                                               
                                                 }
                                                 catch (error) {
-                                                    
                                                     handleError(res, error);
                                                 }
                                                     
