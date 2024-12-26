@@ -7,8 +7,7 @@ const router = Router();
 // Route to get all purchases
 router.get('/', Purchase.getPurchase)
 
-// Route to get purchase by id
-router.get('/:id', Purchase.getPurchaseById)
+
 
 // Route to get purchase by user id
 router.get('/user/:userId', Purchase.getPurchaseByUserId)
@@ -22,6 +21,9 @@ router.get('/product/:productId', Purchase.getPurchaseByProduct)
 // Route to get purchase by date
 router.get('/date', Purchase.getPurchaseByDateRange)
 
+//Route to get purchases stadistics 
+router.get('/stadistics', Purchase.getPurchaseStadistics)
+
 //Route to get purchase by user date
 router.get('/user-date/:userId', Purchase.getPurchaseByUserDate)
 
@@ -31,8 +33,7 @@ router.get('/status', Purchase.getPurchaseByStatus)
 // Route to get purchase by payment method
 router.get('/payment-method', Purchase.getPurchaseByPaymentMethod)
 
-//Route to get purchases stadistics 
-router.get('/stadistics', Purchase.getPurchaseStadistics)
+
 
 //Route to get purchases stadistics by date
 router.get('/stadistics-date', Purchase.getPurchaseStadisticsByDate)
@@ -42,6 +43,9 @@ router.get('/stadistics-user', Purchase.getPurchaseStadisticsByUser)
 
 // Route to get purchase by username
 router.get('/username/:username', Purchase.getPurchaseByUsername)
+
+// Route to get purchase by id
+router.get('/:id', Purchase.getPurchaseById)
 
 // Route to create a new purchase
 router.post('/', Purchase.createPurchase)

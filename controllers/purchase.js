@@ -7,7 +7,7 @@ class Purchase {
 
     static async getPurchase(req, res) {
         try {
-            const purchase = await PurchaseModel.getPurchase();
+            const purchase = await PurchaseModel.getPurchases();
 
             const groupPurchase = new Map();
 
@@ -62,7 +62,38 @@ class Purchase {
             if (!purchase) {
                 return res.status(404).json({message: 'Purchase not found'});
             }
-            res.json(purchase);
+          
+            const groupPurchase = new Map();
+
+            for (const row of purchase) {
+                const { purchase_id, date, amount, user_id, fullname, personal_ID, email,product_id,quantity,price,name } = row;
+        
+                if (!groupPurchase.has(purchase_id)) {
+                    groupPurchase.set(purchase_id, {
+                        purchase_id,
+                        date,
+                       total: amount,
+                        user: {
+                            user_id,
+                            fullname,
+                            personal_ID,
+                            email
+                        },
+                        products: []
+                    });
+                }
+                
+                groupPurchase.get(purchase_id).products.push({
+                    product_id,
+                    quantity,
+                    price,
+                    name,    
+                    });
+        
+            }
+            
+           return res.json([...groupPurchase.values()]);
+
 
             }
             catch (error) {
@@ -73,18 +104,48 @@ class Purchase {
 
 
     static async getPurchaseByUserId(req, res) {
-        const { id } = req.params;
-        if (!id) {
+        const { userId } = req.params;
+        if (!userId) {
             return res.status(400).json({ error: 'User ID is required' });
         }
         try {
-            const purchase = await PurchaseModel.getPurchaseByUserId(id);
+            const purchase = await PurchaseModel.getPurchasesByUserId(userId);
            
             if (!purchase) {
                 return res.status(404).json({message: 'Purchase not found'});
             }
 
-            res.json(purchase);
+            const groupPurchase = new Map();
+
+            for (const row of purchase) {
+                const { purchase_id, date, amount, user_id, fullname, personal_ID, email,product_id,quantity,price,name } = row;
+        
+                if (!groupPurchase.has(purchase_id)) {
+                    groupPurchase.set(purchase_id, {
+                        purchase_id,
+                        date,
+                       total: amount,
+                        user: {
+                            user_id,
+                            fullname,
+                            personal_ID,
+                            email
+                        },
+                        products: []
+                    });
+                }
+                
+                groupPurchase.get(purchase_id).products.push({
+                    product_id,
+                    quantity,
+                    price,
+                    name,    
+                    });
+        
+            }
+            
+           return res.json([...groupPurchase.values()]);
+
         } catch (error) {
             handleError(res, error);
         }
@@ -97,11 +158,42 @@ class Purchase {
             return res.status(400).json({ error: 'Product ID is required' });
             }
             try {
-                const purchase = await purchaseModel.getPurchaseByProduct(id);
+                const purchase = await  PurchaseModel.getPurchasesByProduct(id);
                 if (!purchase) {
                     return res.status(404).json({message: 'Purchase not found'});
                 }
-                res.json(purchase);
+
+                const groupPurchase = new Map();
+
+                for (const row of purchase) {
+                    const { purchase_id, date, amount, user_id, fullname, personal_ID, email,product_id,quantity,price,name } = row;
+            
+                    if (!groupPurchase.has(purchase_id)) {
+                        groupPurchase.set(purchase_id, {
+                            purchase_id,
+                            date,
+                           total: amount,
+                            user: {
+                                user_id,
+                                fullname,
+                                personal_ID,
+                                email
+                            },
+                            products: []
+                        });
+                    }
+                    
+                    groupPurchase.get(purchase_id).products.push({
+                        product_id,
+                        quantity,
+                        price,
+                        name,    
+                        });
+            
+                }
+                
+               return res.json([...groupPurchase.values()]);
+                
                 } catch (error) {
                     handleError(res, error);
                 }
@@ -114,11 +206,42 @@ class Purchase {
                     }
 
                     try {
-                        const purchase = await purchaseModel.getPurchaseByPriceRange(min, max);
+                        const purchase = await PurchaseModel.getPurchasesByPriceRange(min, max);
                         if (!purchase) {
                             return res.status(404).json({message: 'Purchase not found'});
                         }
-                        res.json(purchase);
+
+                        const groupPurchase = new Map();
+
+                        for (const row of purchase) {
+                            const { purchase_id, date, amount, user_id, fullname, personal_ID, email,product_id,quantity,price,name } = row;
+                    
+                            if (!groupPurchase.has(purchase_id)) {
+                                groupPurchase.set(purchase_id, {
+                                    purchase_id,
+                                    date,
+                                   total: amount,
+                                    user: {
+                                        user_id,
+                                        fullname,
+                                        personal_ID,
+                                        email
+                                    },
+                                    products: []
+                                });
+                            }
+                            
+                            groupPurchase.get(purchase_id).products.push({
+                                product_id,
+                                quantity,
+                                price,
+                                name,    
+                                });
+                    
+                        }
+                        
+                       return res.json([...groupPurchase.values()]);
+                    
                         } catch (error) {
                             handleError(res, error);
                         }
@@ -130,11 +253,42 @@ class Purchase {
                                 return res.status(400).json({ error: 'Date range is required' });
                             }
                             try {
-                                const purchase = await purchaseModel.getPurchaseByDateRange(startDate, endDate);
+                                const purchase = await PurchaseModel.getPurchasesByDateRange(startDate, endDate);
                                 if (!purchase) {
                                     return res.status(404).json({message: 'Purchase not found'});
                                     }
-                                    res.json(purchase);
+
+                                    const groupPurchase = new Map();
+
+                                    for (const row of purchase) {
+                                        const { purchase_id, date, amount, user_id, fullname, personal_ID, email,product_id,quantity,price,name } = row;
+                                
+                                        if (!groupPurchase.has(purchase_id)) {
+                                            groupPurchase.set(purchase_id, {
+                                                purchase_id,
+                                                date,
+                                               total: amount,
+                                                user: {
+                                                    user_id,
+                                                    fullname,
+                                                    personal_ID,
+                                                    email
+                                                },
+                                                products: []
+                                            });
+                                        }
+                                        
+                                        groupPurchase.get(purchase_id).products.push({
+                                            product_id,
+                                            quantity,
+                                            price,
+                                            name,    
+                                            });
+                                
+                                    }
+                                    
+                                   return res.json([...groupPurchase.values()]);
+                                    
                                     }
                                     catch (error) {
                                         handleError(res, error);
@@ -148,15 +302,44 @@ class Purchase {
                             if (!userId || !startDate || !endDate) {
                                 return res.status(400).json({ error: 'User ID and Date range are required' });
                             }
-                            if (!userId || !date) {
-                                return res.status(400).json({ error: 'User ID and Date are required' });
-                            }
+                           
                             try {
-                                const purchase = await purchaseModel.getPurchaseByUserDate(userId,startDate, endDate);
+                                const purchase = await PurchaseModel.getPurchasesByUserDate(userId,startDate, endDate);
                                 if (!purchase) {
                                     return res.status(404).json({message: 'Purchase not found'});
                                     }
-                                    res.json(purchase);
+
+                                    const groupPurchase = new Map();
+
+                                    for (const row of purchase) {
+                                        const { purchase_id, date, amount, user_id, fullname, personal_ID, email,product_id,quantity,price,name } = row;
+                                
+                                        if (!groupPurchase.has(purchase_id)) {
+                                            groupPurchase.set(purchase_id, {
+                                                purchase_id,
+                                                date,
+                                               total: amount,
+                                                user: {
+                                                    user_id,
+                                                    fullname,
+                                                    personal_ID,
+                                                    email
+                                                },
+                                                products: []
+                                            });
+                                        }
+                                        
+                                        groupPurchase.get(purchase_id).products.push({
+                                            product_id,
+                                            quantity,
+                                            price,
+                                            name,    
+                                            });
+                                
+                                    }
+                                    
+                                   return res.json([...groupPurchase.values()]);
+
                                     }
                                     catch (error) {
                                         handleError(res, error);
@@ -171,7 +354,7 @@ class Purchase {
                                 return res.status(400).json({ error: 'Status is required' });
                                 }
                                 try {
-                                    const purchase = await purchaseModel.getPurchaseByStatus(status);
+                                    const purchase = await PurchaseModel.getPurchasesByStatus(status);
                                     if (!purchase) {
                                         return res.status(404).json({message: 'Purchase not found'});
                                         }
@@ -189,7 +372,7 @@ class Purchase {
                                 return res.status(400).json({ error: 'Payment method is required' });
                                 }
                                 try {
-                                    const purchase = await purchaseModel.getPurchaseByPaymentMethod(paymentMethod);
+                                    const purchase = await PurchaseModel.getPurchasesByPaymentMethod(paymentMethod);
                                     if (!purchase) {
                                         return res.status(404).json({message: 'Purchase not found'});
                                         }
@@ -204,24 +387,25 @@ class Purchase {
 
                                     static async getPurchaseStadistics(req, res) {
                                         try {
-                                            const purchase = await purchaseModel.getPurchaseStadistics();
+                                            const purchase = await PurchaseModel.getPurchases();
+                                           const purchaseStats = await PurchaseModel.getPurchaseStats()
                                       
-                                            const total_purchases = purchase.length;
-                                            const total_purchases_amount = purchase.reduce((acc, purchase) => acc + purchase.amount, 0);
-                                            const total_purchases_quantity = purchase.reduce((acc, purchase) => acc + purchase.quantity, 0);
+                                            const total_purchases = purchaseStats.length;
+                                            const total_purchases_amount = purchaseStats.reduce((acc, purchase) => acc + parseFloat(purchase.amount), 0);
+                                            //const total_purchases_quantity = purchase.reduce((acc, purchase) => acc + parseFloat(purchase.quantity), 0);
                                             const average_purchase_amount = total_purchases_amount / total_purchases;
-                                            const average_purchase_quantity = total_purchases_quantity / total_purchases;
+                                           // const average_purchase_quantity = total_purchases_quantity / total_purchases;
                                             const min_purchase_amount = Math.min(...purchase.map(purchase => purchase.amount));
                                             const max_purchase_amount = Math.max(...purchase.map(purchase => purchase.amount));
-                                            const first_purchase = purchase[0];
-                                            const last_purchase = purchase[purchase.length - 1];
+                                            const first_purchase = purchaseStats[0];
+                                            const last_purchase = purchaseStats[purchaseStats.length - 1];
 
                                             res.json({
                                                 total_purchases,
                                                 total_purchases_amount,
-                                                total_purchases_quantity,
+                                              //  total_purchases_quantity,
                                                 average_purchase_amount,
-                                                average_purchase_quantity,
+                                              //  average_purchase_quantity,
                                                 min_purchase_amount,
                                                 max_purchase_amount,
                                                 first_purchase,
@@ -235,6 +419,18 @@ class Purchase {
                                             }
 
                                         }
+
+                                        /*    static async getPurchaseStadistics(req, res) {
+                                                try {
+                                                    const purchase = await PurchaseModel.getPurchaseStadistics();
+                                                    console.log(purchase);
+                                                    res.json(purchase);
+                                                }catch(error) {
+                                                    handleError(res, error);
+
+                                                }
+                                            }
+                                                */
 
                                         static async getPurchaseStadisticsByDate(req, res) {
                                             const { startDate,endDate } = req.query;
