@@ -1,6 +1,7 @@
 import PurchaseModel from '../models/purchase.js';
 import handleError from '../utils/handleError.js';
 import authenticateToken from '../middleware/authenticationToken.js';
+import ProductModel from '../models/product.js';
 import {pool} from '../db/db.js';
 
 class Purchase {
@@ -430,7 +431,7 @@ class Purchase {
 
                                         static async getPurchaseStadisticsByDate(req, res) {
                                             const { startDate,endDate } = req.query;
-                                            if (!date) {
+                                            if (!startDate || !endDate) {
                                                 return res.status(400).json({ error: 'Date is required' });
                                             }
                                             try {
@@ -470,9 +471,13 @@ class Purchase {
                                                     return res.status(400).json({ error: 'User ID is required' });
                                                 }
                                                 try {
-                                                    const purchase = await purchaseModel.getPurchaseStadisticsByUser(userId);
-                                                    const total_purchases = purchase.length;
-                                                    const total_purchases_amount = purchase.reduce((acc, purchase) => acc + purchase.amount, 0);
+                                                    const purchase = await PurchaseModel.getPurchasesByUserId(userId);
+                                                    const purchaseStats = await PurchaseModel.getPurchaseStatsByUser(userId);
+
+
+
+                                                    const total_purchases = purchaseStats.length;
+                                                    const total_purchases_amount = purchaseStats.reduce((acc, purchase) => acc + parseFloat(purchase.amount), 0);
                                                     const total_purchases_quantity = purchase.reduce((acc, purchase) => acc + purchase.quantity, 0);
                                                     const average_purchase_amount = total_purchases_amount / total_purchases;
                                                     const average_purchase_quantity = total_purchases_quantity / total_purchases;
@@ -520,7 +525,7 @@ class Purchase {
                                                     }
 
                                                     static async createPurchase(req, res) {
-                                                        const {userId,products}= re.body;
+                                                        const {userId,products}= req.body;
                                                         if (!userId || !products) {
                                                             return res.status(400).json({ error: 'User ID and products are required' });
                                                             }
@@ -557,13 +562,14 @@ class Purchase {
                                                                     insertProducts.push(product);
                                                                 }
 
-                                                                const purchaseId = await purchaseModel.createPurchase(connection,userId,total_purchase);
+                                                                const purchaseId = await PurchaseModel.createPurchase(connection,userId,total_purchase);
 
-                                                                await purchaseModel.createPurchaseProducts(connection,purchaseId,insertProducts);
+                                                                await PurchaseModel.createPurchasedProduct(connection,purchaseId,insertProducts);
 
                                                                 for (const product of insertProducts) {
                                                                     const {product_id,quantity} = product;
                                                                     const stock = await ProductModel.getProductStock(connection,product_id);
+                                                                    //console.log(stock);
                                                                     const newStock = stock - quantity;
                                                                     await ProductModel.updateProductStock(connection,product_id,newStock);
                                                                 }
@@ -572,10 +578,10 @@ class Purchase {
 
                                                                 for (const product of insertProducts){
                                                                     const {product_id,quantity} = product;
-                                                                    await ProductModel.updateTopSelling(product_id,quantity);
+                                                                    await ProductModel.updateTopSellings(product_id,quantity);
                                                                 }
 
-                                                                notificationService.notifyClients(`Purchase Notification recieved: ${purchaseId}, Usuario: ${userId}, Total: ${total_purchase}`)
+                                                              //  notificationService.notifyClients(`Purchase Notification recieved: ${purchaseId}, Usuario: ${userId}, Total: ${total_purchase}`)
 
                                                                 return res.json({ message: 'Purchase created successfully', purchaseId: purchaseId });
                                                                 
@@ -597,15 +603,19 @@ class Purchase {
                                                             await connection.beginTransaction();
 
                                                             try {
-                                                                const purchaseProducts = await purchaseModel.getPurchaseProductsById(connection,purchaseId);
-
+                                                                const [purchaseProducts] = await PurchaseModel.getPurchaseById(connection,purchaseId);
+                                                              // console.log(purchaseProducts);
+                                                           
                                                                for (const product of purchaseProducts){
                                                                 const {product_id,purchase_id} = product;
-                                                                await purchaseModel.deletePurchaseProduct(connection,purchase_id);
+                                                                console.log(product.product_id);
+                                                                
+                                                               const deleteProducts=  await PurchaseModel.deletePurchasedProduct(connection,purchase_id);
+                                                               console.log(deleteProducts);
  
                                                                }
 
-                                                                await purchaseModel.deletePurchase(connection,purchaseId);
+                                                                await PurchaseModel.deletePurchase(connection,purchaseId);
 
                                                                 await connection.commit();
 

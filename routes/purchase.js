@@ -39,7 +39,7 @@ router.get('/payment-method', Purchase.getPurchaseByPaymentMethod)
 router.get('/stadistics-date', Purchase.getPurchaseStadisticsByDate)
 
 //Routet to get purchases stadistics by user
-router.get('/stadistics-user', Purchase.getPurchaseStadisticsByUser)
+router.get('/stadistics-user/:userId', Purchase.getPurchaseStadisticsByUser)
 
 // Route to get purchase by username
 router.get('/username/:username', Purchase.getPurchaseByUsername)
@@ -54,7 +54,7 @@ router.post('/', Purchase.createPurchase)
 //router.put('/:id', Purchase.updatePurchase)
 
 // Route to delete a purchase
-router.delete('/:id', Purchase.deletePurchase)
+router.delete('/:purchaseId', Purchase.deletePurchase)
 
 
 

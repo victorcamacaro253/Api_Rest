@@ -86,9 +86,9 @@ class ProductModel{
     }
 
     static async getProductStock(connection,productId){
-        const SQL = 'SELECT * FROM stock WHERE product_id = ?';
-        const result = await connection.query(SQL,[productId]);
-        return result;
+        const SQL = 'SELECT * FROM stock WHERE product = ?';
+        const [result] = await connection.query(SQL,[productId]);
+        return result[0].stock;
     }
 
     static async checkStock(){
@@ -98,6 +98,7 @@ class ProductModel{
     }
 
   static async updateProductStock(connection,productId,newStock){
+     console.log(newStock)
        const SQL ='UPDATE stock s SET s.stock =  ?  WHERE s.product=?'
         const results = await connection.query(SQL,[newStock,productId]);
         return results;
@@ -144,6 +145,12 @@ class ProductModel{
             const results = await Promise.all(queries);
             return results;
             }
+
+            static async updateTopSellings(productId,quantity){
+                const SQL = 'UPDATE most_sold_products set total_sold = total_sold + ? WHERE product_id = ?';
+                const results = await query(SQL,[productId,quantity]);
+                return results;
+                }
 
 }
 
