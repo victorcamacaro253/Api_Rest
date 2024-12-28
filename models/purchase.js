@@ -279,7 +279,7 @@ static async getPurchasesByPriceRange(min,max){
     }
 
     static async deletePurchasedProduct(connection,id){
-        console.log('id',id)
+       
         const result = await connection.query('DELETE FROM purchased_products WHERE purchase_id = ?',[id]);
         return result;
     }
