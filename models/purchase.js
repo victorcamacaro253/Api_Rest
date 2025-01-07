@@ -262,7 +262,7 @@ static async getPurchasesByPriceRange(min,max){
     }
 
     static async createPurchase(connection, userId,total_purchase){
-        const [result] = await connection.query('INSERT INTO purchases (user_id,amount,date) VALUES (?,?,NOW())',[userId,total_purchase]); 
+        const [result] = await connection.query('INSERT INTO purchases (user_id,total_purchase,date) VALUES (?,?,NOW())',[userId,total_purchase]); 
         return result.insertId;
     }
 
