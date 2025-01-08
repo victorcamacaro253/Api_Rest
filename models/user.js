@@ -169,14 +169,14 @@ static async filterUsers(fields, values) {
 
 
    static async insertLoginRecord(userId, code) {
-    const SQL=`INSERT INTO historial_ingresos (id_usuario, fecha, codigo) VALUES (?, NOW(), ?)`
+    const SQL=`INSERT INTO login_history (user_id,date, code) VALUES (?, NOW(), ?)`
         await query( SQL, [userId, code]);
     }
 
 
-    static async GetUserByEmail(email) {
+    static async getUserByEmail(email) {
         const SQL = `SELECT * FROM users WHERE email = ?`
-        const results = await query(SQL, [email]);
+        const [results] = await query(SQL, [email]);
         return results;
     }
 
