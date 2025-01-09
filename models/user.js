@@ -237,7 +237,7 @@ static async getUsersWithPagination(limit,offset){
     }
 
 
-   static async findUserByGoogleId(googleId) {
+   static async getUserByGoogleId(googleId) {
         const SQL = 'SELECT * FROM users WHERE google_id = ?';
         const [rows] = await query(SQL, [googleId]);
         console.log(rows)
