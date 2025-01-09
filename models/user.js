@@ -56,16 +56,17 @@ class UserModel{
     }
 
 
-  static  async addUserGoogle({ google_id, username, email, image }) {
+  static  async addUserGoogle({ googleId, username, email, image }) {
+    console.log(googleId,username)
     const SQL = `INSERT INTO users (google_id, username, email, image) VALUES (?,?,?,?)`;
         const result = await query(SQL,
-            [google_id, username, email, image]
+            [googleId, username, email, image]
         );
     
      // Ahora, busca el usuario insertado usando su ID
      const SQL2='SELECT * FROM users WHERE user_id = ?';
   const insertedUser = await query(SQL2, [result.insertId]);
-    
+    //console.log(insertedUser[0])
   return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
     }
 
@@ -237,8 +238,9 @@ static async getUsersWithPagination(limit,offset){
 
 
    static async findUserByGoogleId(googleId) {
-        const SQL = 'SELECT u.user_id,u.google_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE google_id = ?';
+        const SQL = 'SELECT * FROM users WHERE google_id = ?';
         const [rows] = await query(SQL, [googleId]);
+        console.log(rows)
         return rows;
     }
 

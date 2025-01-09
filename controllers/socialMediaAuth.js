@@ -17,8 +17,11 @@ async (accessToken,refreshToken,profile,done)=>{
 
     try {
         let rows = await UserModel.findUserByGoogleId(profile.id)
+        console.log('datos',rows)
 
         if(rows){
+            console.log('El usuario ya existe:', rows);
+
             return done(null,rows)
         }else{
 
