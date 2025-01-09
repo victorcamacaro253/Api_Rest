@@ -15,7 +15,7 @@ router.use('/purchases',Purchase)
 
 router.use(rolesPermissions)
 
-router.use('/authentication',authentication)
+router.use('/auth',authentication)
 
 
 export default router
