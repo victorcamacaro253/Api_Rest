@@ -39,4 +39,15 @@ router.get('/logout',(req,res)=>{
 })
 
 
+//-----------------------------Facebook-----------------------------------------------------------------
+
+
+router.get('/facebook',passport.authenticate('facebook',{scope:['email']}));
+
+router.get('/facebook/callback',passport.authenticate('facebook',{failureRedirect:'/'}),
+(req,res)=>{
+  res.redirect('/profile')
+}
+)
+
 export default router;

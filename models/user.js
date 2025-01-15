@@ -72,10 +72,10 @@ class UserModel{
 
 
 
-   static async addUserFacebook({ facebook_id, nombre, correo, imagen }) {
-    const SQL='INSERT INTO users (facebook_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)'
+   static async addUserFacebook({ facebook_id, username, email, image }) {
+    const SQL='INSERT INTO users (facebook_id, username, email, image) VALUES (?, ?, ?, ?)'
         const result = await query(SQL,
-            [facebook_id, nombre, correo, imagen]
+            [facebook_id, username, email, image]
         );
     
      // Ahora, busca el usuario insertado usando su ID
@@ -244,8 +244,8 @@ static async getUsersWithPagination(limit,offset){
         return rows;
     }
 
-   static async findUserByFacebookId(facebookId) {
-        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE google_id = ?';
+   static async getUserByFacebookId(facebookId) {
+        const SQL = 'SELECT * FROM users WHERE facebook_id = ?';
         const [rows] = await query(SQL, [facebookId]);
         return rows;
     }
