@@ -85,10 +85,10 @@ class UserModel{
   return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
     }
 
-   static async addUserGithub({ github_id, nombre, correo, imagen }) {
-    const SQL='INSERT INTO users (github_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)'
+   static async addUserGithub({ github_id, username, email, image }) {
+    const SQL='INSERT INTO users (github_id, username, email, image) VALUES (?, ?, ?, ?)'
         const result = await query(SQL,
-            [github_id, nombre, correo, imagen]
+            [github_id, username, email, image]
         );
     
      // Ahora, busca el usuario insertado usando su ID
@@ -99,15 +99,15 @@ class UserModel{
     }
 
     
-   static async addUserTwitter({ twitter_id, nombre, correo, imagen }) {
-        const SQL=`INSERT INTO users (twitter_id, nombre, correo, imagen) VALUES (?, ?, ?, ?)`
+   static async addUserTwitter({ twitter_id, username, email, image }) {
+        const SQL=`INSERT INTO users (twitter_id, username, email, image) VALUES (?, ?, ?, ?)`
         const result = await query(SQL,
-            [twitter_id, nombre, correo, imagen]
+            [twitter_id, username, email, image]
         );
     
      // Ahora, busca el usuario insertado usando su ID
       const SQL2=`SELECT * FROM users WHERE user_id = ?`
-      const insertedUser = await _query(SQL2, [result.insertId]);
+      const insertedUser = await query(SQL2, [result.insertId]);
     
       return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
 
@@ -250,15 +250,15 @@ static async getUsersWithPagination(limit,offset){
         return rows;
     }
 
-   static async findUserByGithubId(githubId) {
-        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE github_id = ?';
+   static async getUserByGithubId(githubId) {
+        const SQL = 'SELECT * FROM users WHERE github_id = ?';
         const [rows] = await query(SQL, [githubId]);
         return rows;
     }
 
 
-   static async findUserByTwitterId(twitterId) {
-        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id WHERE twitter_id = ?';
+   static async getUserByTwitterId(twitterId) {
+        const SQL = 'SELECT * FROM users WHERE twitter_id = ?';
         const [rows] = await query(SQL, [twitterId]);
         return rows;
     }
