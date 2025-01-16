@@ -2,6 +2,8 @@ import express ,{json} from 'express';
 import helmet from 'helmet';
 import routes from './routes/index.js';
 import authentication from './routes/authRoutes.js'
+import limiter from './middleware/rateLimiter.js';
+
 import cors from 'cors';
 import morgan from 'morgan';
 import session from 'express-session';
@@ -31,6 +33,9 @@ app.use(session({
 app.use(helmet())
 
 app.use(morgan('dev'))
+
+app.use(limiter);
+
 
 app.disable('x-powered-by')
 

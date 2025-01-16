@@ -4,10 +4,19 @@ import product from "./product.js";
 import Purchase from "./purchase.js";
 import rolesPermissions from "./rolesPermissions.js";
 import authentication from "./authRoutes.js";
+import csrf from '../middleware/csrfToken.js'
+import cookieParser from 'cookie-parser';
+
+
 
 const router= Router()
 
-router.use('/users',user)
+router.use(cookieParser())
+
+router.get('/csrftoken',csrf.setCsrfToken)
+
+
+router.use('/users',csrf.csrfMiddleware,user)
 
 router.use('/products',product)
 
