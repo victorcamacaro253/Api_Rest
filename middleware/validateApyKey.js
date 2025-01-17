@@ -1,4 +1,4 @@
-import apiKeyModel from "../models/apiKeyModel.js";
+import apiKeyModel from "../models/apiKey.js";
 import {  compare } from 'bcrypt';
 
 

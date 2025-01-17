@@ -6,6 +6,8 @@ import rolesPermissions from "./rolesPermissions.js";
 import authentication from "./authRoutes.js";
 import csrf from '../middleware/csrfToken.js'
 import cookieParser from 'cookie-parser';
+import apiKey from './apiKey.js'
+
 
 
 
@@ -25,6 +27,9 @@ router.use('/purchases',Purchase)
 router.use(rolesPermissions)
 
 router.use('/auth',authentication)
+
+router.use('/apiKey',apiKey)
+
 
 
 export default router

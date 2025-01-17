@@ -4,7 +4,7 @@ import { query } from "../db/db.js";
 class apiKeyModel {
 
  static async saveApiKey(apiKey,userId) {
-    const result = await query(`INSERT INTO api_keys (user_id,apiKey,revoked) VALUES (?,?,0,)`,
+    const result = await query(`INSERT INTO api_keys (user_id,apiKey,revoked) VALUES (?,?,0)`,
          [userId,apiKey]);
     return result;
     

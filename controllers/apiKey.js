@@ -4,7 +4,7 @@ import apiKeyService from '../services/apiKeyService.js';
 class apiKey {
 
 static getApiKey = async (req,res)=>{
-    const {id} = req.params;
+    const id = req.user.id
 
     try {
         const apiKey = apiKeyService.generateApiKey();
