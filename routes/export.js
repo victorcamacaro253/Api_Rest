@@ -10,13 +10,14 @@ router.get('/Excel/users',exportData.UsersDataExcel)
 
 //Ruta para exportar los usuario por nombre en excel
 
-router.get('/Excel/users/name',exportData.UsersDataByNameExcel)
+//router.get('/Excel/users/name',exportData.UsersDataByNameExcel)
 
 //Ruta para exportar los usuario por id en excel
 
-router.get('/export/Excel/users/:id', exportData.tUserDataExcel);
+router.get('/Excel/users/:id', exportData.UserDataExcel);
 
 //Ruta para exportar todos los usuario en pdf
+/*
 
 router.get('/PDF/users', exportData.exportUserDataPdf)
 
@@ -78,5 +79,5 @@ router.get('/PDF/products',exportData.exportProductsPdf)
 
 router.get('/Excel/products',exportData.exportProducts)
 
-
+*/
 export default router

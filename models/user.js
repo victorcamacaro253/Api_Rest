@@ -3,15 +3,15 @@ import { query,pool } from '../db/db.js';
 class UserModel{
 
    static async getAllUsers() {
-        const SQL='SELECT u.user_id,u.fullname,u.username,u.national_ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id'
+        const SQL='SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id'
         const results = await query(SQL);
         return results;
     }
 
  static  async getUserById(id) {
 
-        const SQL = 'SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_idu.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id WHERE u.user_id = ?';
-        const results = await query(SQL, [id]);
+        const SQL = 'SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id WHERE u.user_id = ?';
+        const [results] = await query(SQL, [id]);
         return results;
     }
 
