@@ -111,7 +111,6 @@ class Purchase {
         }
         try {
             const purchase = await PurchaseModel.getPurchasesByUserId(userId);
-           
             if (!purchase) {
                 return res.status(404).json({message: 'Purchase not found'});
             }

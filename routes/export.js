@@ -24,24 +24,27 @@ router.get('/PDF/users', exportData.UsersDataPdf)
 //Ruta para exportar los usarios por id en pdf
 
 router.get('/PDF/users/:id', exportData.UserDataPdf)
-/*
+
 //Ruta para exportar todos los usarios en csv
 
-router.get('/CSV/users',exportData.exportUserDataToCsv)
+router.get('/CSV/users',exportData.UsersDataCsv)
 
 //Ruta para exportar los usarios por id en csv
 
-router.get('/CSV/users/:id',exportData.exportUserDataByidCsv)
+router.get('/CSV/users/:id',exportData.UserDataCsv)
 
 //Ruta para exportar todos los usarios en formato json
 
-router.get('/JSON/users',exportData.exportUserDataToJson)
+//router.get('/JSON/users',exportData.exportUserDataToJson)
 
 
 //Ruta para exportar las compras por nombre de usuario en excel
 
-router.get('/Excel/purchases/name',exportData.exportComprasDataByName)
+router.get('/Excel/purchases/:userId',exportData.PurchasesDataByUserExcel)
 
+router.get('/Excel/purchases',exportData.PurchaseDataExcel)
+
+/*
 //Ruta para exportar las compras por fecha en excel
 
 router.get('/Excel/purchases/date',exportData.exportComprasByDate)
@@ -52,7 +55,6 @@ router.get('/Excel/purchases/:id',exportData.exportComprasUserData);
 
 //Ruta para exportar todsas las compras en excel
 
-router.get('/Excel/purchases',exportData.exportComprasData)
 
 //Ruta para exportar las compras por fecha para el usuario en excel
 

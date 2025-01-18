@@ -51,23 +51,23 @@ static async getPurchaseById(connection,id){
 
 
 static async getPurchasesByUserId(userId){
-    const SQL = `SELECT
-    c.purchase_id,
-    c.date,
-    c.amount,
-    u.user_id,
-    u.fullname,
-    u.personal_ID,
-    u.email,
-
-    cp.product_id,
-    cp.quantity,
-    cp.price,
-    p.name
-    FROM purchased_products cp
-    JOIN products p ON cp.product_id=p.product_id
-    JOIN purchases c ON cp.purchase_id=c.purchase_id
-    JOIN users u ON c.user_id=u.user_id WHERE u.user_id = ?`;
+  console.log(userId)
+    const SQL = `SELECT 
+                c.purchase_id,
+                c.date,
+                c.amount,
+                u.user_id,
+                u.fullname,
+                u.personal_ID,
+                u.email,
+                cp.product_id,
+                cp.quantity,
+                cp.price,
+                p.name
+                FROM purchased_products cp
+                 JOIN products p ON cp.product_id=p.product_id 
+                 JOIN purchases c ON cp.purchase_id=c.purchase_id
+                  JOIN users u ON c.user_id=u.user_id WHERE u.user_id = ?`;
     const result = await query(SQL,[userId]);
     return result;
 

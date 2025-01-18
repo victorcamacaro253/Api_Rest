@@ -1,4 +1,5 @@
 import UserModel from '../models/user.js';
+import PurchaseModel from '../models/purchase.js';
 import handleError from '../utils/handleError.js';
 import XLSX from 'xlsx';
 import PDFDocument from 'pdfkit';
@@ -7,6 +8,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { Parser  } from 'json2csv';
+
 
 // Get the current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -303,6 +306,203 @@ class exportData{
             handleError(res, error);
         }
     }
+
+
+   static async UsersDataCsv(req,res){
+
+    try {
+
+        const users = await UserModel.getAllUsers()
+    
+    
+        if (!users || users.length === 0) {
+            throw new Error('No users found');
+        }
+    
+        const fields= ['user_id','fullname','username','email','personal ID','phone','role',"name"]
+        const json2csvParser = new Parser({fields})
+        const csv = json2csvParser.parse(users)
+        res.setHeader('Content-Disposition', 'attachment; filename="user_data.csv"');
+        res.setHeader('Content-Type', 'text/csv');
+        res.send(csv);
+     
+       } catch (error) {
+        handleError(res,error)
+       }
+   }
+
+
+   static async UserDataCsv(req,res){
+    const {id}= req.params
+
+    try {
+        const users = await UserModel.getUserById(id)
+    
+    
+        if (!users || users.length === 0) {
+            throw new Error('No users found');
+        }
+    
+        const fields= ['user_id','fullname','username','email','personal_ID','phone','role_name']
+        const json2csvParser = new Parser({fields})
+        const csv = json2csvParser.parse(users)
+        res.setHeader('Content-Disposition', 'attachment; filename="user_data.csv"');
+        res.setHeader('Content-Type', 'text/csv');
+        res.send(csv);
+     
+       } catch (error) {
+        handleError(res,error)
+       }
+   }
+
+   static async PurchasesDataByUserExcel(req,res){
+      const {userId} = req.params
+    try {
+        const purchases = await PurchaseModel.getPurchasesByUserId(userId);
+console.log(purchases)
+        if (!purchases || purchases.length === 0) {
+            throw new Error('No purchases found');
+        }
+
+        // Agrupar las compras
+        const groupedPurchases = {};
+
+        purchases.forEach(row => {
+            if (!groupedPurchases[row.purchase_id]) {
+                // Si aún no existe la compra, la crea
+                groupedPurchases[row.purchase_id] = {
+                    purchase_id: row.purchase_id,
+                    date: row.date,
+                    fullname: row.fullname,
+                    email: row.email,
+                    personal_ID: row.personal_ID,
+                    products: [] // Inicializa el array de productos
+                };
+            }
+
+            // Agregar el producto a la lista de productos
+            groupedPurchases[row.purchase_id].products.push({
+                product_id: row.product_id,
+                name: row.name,
+                amount: row.amount,
+                price: row.price
+            });
+        });
+
+        // Convertir el objeto agrupado en un array
+        const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
+            ...purchase,
+            products: purchase.products.map(product => `ID: ${product.product_id},nombre:${product.name}, Cantidad: ${product.amount}, Precio: ${product.price}`).join('; ')
+        }));
+
+        // Crear un nuevo libro de trabajo
+        const wb = XLSX.utils.book_new();
+
+        // Crear una hoja de trabajo desde los datos agrupados
+        const ws = XLSX.utils.json_to_sheet(finalPurchases, {
+            header: ['purchase', 'date', 'fullname', 'username', 'email', 'personal_ID', 'products']
+        });
+
+        // Agregar la hoja de trabajo al libro
+        XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+
+        // Convertir el libro a un buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        // Configurar las cabeceras para la descarga
+        res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+        return excelBuffer;
+
+    } catch (error) {
+       handleError(res,error)
+    }
+
+   }
+
+
+   static async PurchaseDataExcel(req, res) {
+    try {
+        const purchases = await PurchaseModel.getPurchases();
+        console.log(purchases);
+
+        if (!purchases || purchases.length === 0) {
+            throw new Error('No purchases found');
+        }
+
+        // Agrupar las compras
+        const groupedPurchases = {};
+
+        purchases.forEach(row => {
+            if (!groupedPurchases[row.purchase_id]) {
+                // Si aún no existe la compra, la crea
+                groupedPurchases[row.purchase_id] = {
+                    purchase_id: row.purchase_id,
+                    date: row.date,
+                    fullname: row.fullname,
+                    email: row.email,
+                    personal_ID: row.personal_ID,
+                    products: [] // Inicializa el array de productos
+                };
+            }
+
+            // Agregar el producto a la lista de productos
+            groupedPurchases[row.purchase_id].products.push({
+                product_id: row.product_id,
+                name: row.name,
+                amount: row.amount,
+                price: row.price
+            });
+        });
+
+        // Convertir el objeto agrupado en un array
+        const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
+            ...purchase,
+            products: purchase.products
+                .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
+                .join('; ')
+        }));
+
+        // Crear un nuevo libro de trabajo
+        const wb = XLSX.utils.book_new();
+
+        // Crear una hoja de trabajo desde los datos agrupados
+        const ws = XLSX.utils.json_to_sheet(finalPurchases, {
+            header: ['purchase_id', 'date', 'fullname', 'email', 'personal_ID', 'products']
+        });
+
+        // Ajustar el ancho de las columnas automáticamente
+        const columnWidths = Object.keys(finalPurchases[0]).map((key, index) => {
+            const maxLength = Math.max(
+                key.length, // Longitud del nombre de la columna
+                ...finalPurchases.map(row => (row[key] ? row[key].toString().length : 0)) // Longitud máxima del contenido
+            );
+            return { wch: maxLength + 2 }; // Agregar un poco de espacio adicional
+        });
+
+        ws['!cols'] = columnWidths;
+
+        // Agregar la hoja de trabajo al libro
+        XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+
+        // Convertir el libro a un buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        // Configurar las cabeceras para la descarga
+        res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+        return excelBuffer;
+
+    } catch (error) {
+        handleError(res, error);
+    }
+}
+
+
 }
 
 export default exportData
