@@ -357,9 +357,11 @@ class exportData{
 
    static async PurchasesDataByUserExcel(req,res){
       const {userId} = req.params
-    try {
+    
+      try {
         const purchases = await PurchaseModel.getPurchasesByUserId(userId);
-console.log(purchases)
+        console.log(purchases);
+
         if (!purchases || purchases.length === 0) {
             throw new Error('No purchases found');
         }
@@ -392,7 +394,9 @@ console.log(purchases)
         // Convertir el objeto agrupado en un array
         const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
             ...purchase,
-            products: purchase.products.map(product => `ID: ${product.product_id},nombre:${product.name}, Cantidad: ${product.amount}, Precio: ${product.price}`).join('; ')
+            products: purchase.products
+                .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
+                .join('; ')
         }));
 
         // Crear un nuevo libro de trabajo
@@ -400,8 +404,19 @@ console.log(purchases)
 
         // Crear una hoja de trabajo desde los datos agrupados
         const ws = XLSX.utils.json_to_sheet(finalPurchases, {
-            header: ['purchase', 'date', 'fullname', 'username', 'email', 'personal_ID', 'products']
+            header: ['purchase_id', 'date', 'fullname', 'email', 'personal_ID', 'products']
         });
+
+        // Ajustar el ancho de las columnas automáticamente
+        const columnWidths = Object.keys(finalPurchases[0]).map((key, index) => {
+            const maxLength = Math.max(
+                key.length, // Longitud del nombre de la columna
+                ...finalPurchases.map(row => (row[key] ? row[key].toString().length : 0)) // Longitud máxima del contenido
+            );
+            return { wch: maxLength + 2 }; // Agregar un poco de espacio adicional
+        });
+
+        ws['!cols'] = columnWidths;
 
         // Agregar la hoja de trabajo al libro
         XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
@@ -417,9 +432,8 @@ console.log(purchases)
         return excelBuffer;
 
     } catch (error) {
-       handleError(res,error)
+        handleError(res, error);
     }
-
    }
 
 
