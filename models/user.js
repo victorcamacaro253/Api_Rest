@@ -3,21 +3,21 @@ import { query,pool } from '../db/db.js';
 class UserModel{
 
    static async getAllUsers() {
-        const SQL='SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id'
+        const SQL='SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.phone,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id'
         const results = await query(SQL);
         return results;
     }
 
  static  async getUserById(id) {
 
-        const SQL = 'SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id WHERE u.user_id = ?';
+        const SQL = 'SELECT u.user_id,u.google_id,u.facebook_id,u.github_id,u.twitter_id,u.fullname,u.username,u.personal_ID,u.phone,u.email,u.role,r.name as role_name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id WHERE u.user_id = ?';
         const [results] = await query(SQL, [id]);
         return results;
     }
 
    static async getUserByUsername(username){
-        const SQL = `SELECT  u.user_id,u.fullname,u.username,u.national_.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id FROM users WHERE u.username = ?`;
-        const result= await query(SQL,[nombre]);
+        const SQL = 'SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.phone,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id  WHERE u.username = ?';
+        const result= await query(SQL,[username]);
         return result;
       
           }
@@ -30,8 +30,8 @@ class UserModel{
         return results;
     }
 
-   static async getUserByNationalID(ID) {
-    const SQL = `SELECT  u.user_id,u.fullname,u.username,u.national_.ID,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id  WHERE u.national_ID = ?`;
+   static async getUserByPersonalID(ID) {
+    const SQL = `SELECT  u.user_id,u.fullname,u.username,u.personal_.ID,u.phone,u.email,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id  WHERE u.national_ID = ?`;
         const results = await query(SQL,[ID]);
           // Si el arreglo `results` contiene al menos un resultado, retorna `true`, si no, retorna `false`
         return results.length > 0;
@@ -39,7 +39,7 @@ class UserModel{
     }
 
     static async getUserByEmail(email) {
-        const SQL = `SELECT  u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.password,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id  WHERE u.email = ?`;
+        const SQL = `SELECT  u.user_id,u.fullname,u.username,u.personal_ID,u.phone,u.email,u.password,u.role,r.name,u.image,u.status FROM users u JOIN roles r ON u.role = r.id  WHERE u.email = ?`;
         const [results] = await query(SQL, [email]);
         return results;
 
@@ -209,7 +209,7 @@ static async getLoginHistory(nombre){
 
 static async getUsersWithPagination(limit,offset){
     try {
-        const SQL= `SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id LIMIT ? OFFSET ?`
+        const SQL= `SELECT u.user_id,u.fullname,u.username,u.personal_ID,u.phone,u.email,u.role,r.name as role_name,u.image FROM users u JOIN roles r ON u.role = r.id LIMIT ? OFFSET ?`
         const result= await query(SQL,[limit,offset])
         return result;
 
