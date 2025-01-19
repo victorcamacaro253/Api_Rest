@@ -517,6 +517,186 @@ class exportData{
 }
 
 
+
+   static async PurchasesDataByUserExcel(req,res){
+      const {userId} = req.params
+    
+      try {
+        const purchases = await PurchaseModel.getPurchasesByUserId(userId);
+        console.log(purchases);
+
+        if (!purchases || purchases.length === 0) {
+            throw new Error('No purchases found');
+        }
+
+        // Agrupar las compras
+        const groupedPurchases = {};
+
+        purchases.forEach(row => {
+            if (!groupedPurchases[row.purchase_id]) {
+                // Si aún no existe la compra, la crea
+                groupedPurchases[row.purchase_id] = {
+                    purchase_id: row.purchase_id,
+                    date: row.date,
+                    fullname: row.fullname,
+                    email: row.email,
+                    personal_ID: row.personal_ID,
+                    products: [] // Inicializa el array de productos
+                };
+            }
+
+            // Agregar el producto a la lista de productos
+            groupedPurchases[row.purchase_id].products.push({
+                product_id: row.product_id,
+                name: row.name,
+                amount: row.amount,
+                price: row.price
+            });
+        });
+
+        // Convertir el objeto agrupado en un array
+        const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
+            ...purchase,
+            products: purchase.products
+                .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
+                .join('; ')
+        }));
+
+        // Crear un nuevo libro de trabajo
+        const wb = XLSX.utils.book_new();
+
+        // Crear una hoja de trabajo desde los datos agrupados
+        const ws = XLSX.utils.json_to_sheet(finalPurchases, {
+            header: ['purchase_id', 'date', 'fullname', 'email', 'personal_ID', 'products']
+        });
+
+        // Ajustar el ancho de las columnas automáticamente
+        const columnWidths = Object.keys(finalPurchases[0]).map((key, index) => {
+            const maxLength = Math.max(
+                key.length, // Longitud del nombre de la columna
+                ...finalPurchases.map(row => (row[key] ? row[key].toString().length : 0)) // Longitud máxima del contenido
+            );
+            return { wch: maxLength + 2 }; // Agregar un poco de espacio adicional
+        });
+
+        ws['!cols'] = columnWidths;
+
+        // Agregar la hoja de trabajo al libro
+        XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+
+        // Convertir el libro a un buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        // Configurar las cabeceras para la descarga
+        res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+        return excelBuffer;
+
+    } catch (error) {
+        handleError(res, error);
+    }
+   }
+
+
+   static async PurchaseDataByDateRange(req,res){
+    console.log(req.query)
+    const {startDate,endDate}= req.query;
+    console.log(startDate,endDate)
+
+    if(!startDate ||  !endDate){
+     return res.status(400).json({error:'Se requieren start'})  
+      }
+
+    //Formateamos la fecha
+   const formattedStartDate = new Date(startDate)
+   const formattedEndDate= new Date(endDate);
+
+     if(isNaN(formattedStartDate) || isNaN(formattedEndDate)){
+    return res.status(400).json({error:'Fechas invalidas'})
+     }
+
+    try {
+        const purchases = await PurchaseModel.getPurchasesByDateRange(formattedStartDate,formattedEndDate);
+       console.log(purchases);
+
+        if (!purchases || purchases.length === 0) {
+            throw new Error('No purchases found');
+        }
+
+        // Agrupar las compras
+        const groupedPurchases = {};
+
+        purchases.forEach(row => {
+            if (!groupedPurchases[row.purchase_id]) {
+                // Si aún no existe la compra, la crea
+                groupedPurchases[row.purchase_id] = {
+                    purchase_id: row.purchase_id,
+                    date: row.date,
+                    fullname: row.fullname,
+                    email: row.email,
+                    personal_ID: row.personal_ID,
+                    products: [] // Inicializa el array de productos
+                };
+            }
+
+            // Agregar el producto a la lista de productos
+            groupedPurchases[row.purchase_id].products.push({
+                product_id: row.product_id,
+                name: row.name,
+                amount: row.amount,
+                price: row.price
+            });
+        });
+
+        // Convertir el objeto agrupado en un array
+        const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
+            ...purchase,
+            products: purchase.products
+                .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
+                .join('; ')
+        }));
+
+        // Crear un nuevo libro de trabajo
+        const wb = XLSX.utils.book_new();
+
+        // Crear una hoja de trabajo desde los datos agrupados
+        const ws = XLSX.utils.json_to_sheet(finalPurchases, {
+            header: ['purchase_id', 'date', 'fullname', 'email', 'personal_ID', 'products']
+        });
+
+        // Ajustar el ancho de las columnas automáticamente
+        const columnWidths = Object.keys(finalPurchases[0]).map((key, index) => {
+            const maxLength = Math.max(
+                key.length, // Longitud del nombre de la columna
+                ...finalPurchases.map(row => (row[key] ? row[key].toString().length : 0)) // Longitud máxima del contenido
+            );
+            return { wch: maxLength + 2 }; // Agregar un poco de espacio adicional
+        });
+
+        ws['!cols'] = columnWidths;
+
+        // Agregar la hoja de trabajo al libro
+        XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+
+        // Convertir el libro a un buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        // Configurar las cabeceras para la descarga
+        res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+        return excelBuffer;
+
+    } catch (error) {
+        handleError(res, error);
+    }
+
+   }
+
+
 }
 
 export default exportData
