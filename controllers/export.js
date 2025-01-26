@@ -688,7 +688,7 @@ static async PurchasesDataByUserExcel(req, res) {
 }
 
 
-   static async PurchaseDataByDateRange(req,res){
+   static async PurchaseDataByDateRangeExcel(req,res){
     const {startDate,endDate}= req.query;
     console.log(startDate,endDate)
 
