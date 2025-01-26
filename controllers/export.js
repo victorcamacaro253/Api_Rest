@@ -802,80 +802,293 @@ static async PurchasesDataByUserExcel(req, res) {
     try {
         const purchases = await PurchaseModel.getPurchasesByUserDate(id, formattedDateFrom, formattedDateTo);
 console.log(purchases)
-        if (!Array.isArray(purchases)) {
-            return res.status(500).json({ error: 'Unexpected response format' });
-        }
-        
-        
+if (!purchases || purchases.length === 0) {
+    throw new Error('No purchases found');
+}
 
-        // Agrupar las compras
-        const groupedPurchases = {};
+// Extract unique user data
+const { fullname, email, personal_ID } = purchases[0]; // Assume all rows have the same user data
+const groupedPurchases = {};
 
-        purchases.forEach(row => {
-            if (!groupedPurchases[row.purchase_id]) {
-                // Si aún no existe la compra, la crea
-                groupedPurchases[row.purchase_id] = {
-                    purchase_id: row.purchase_id,
-                    date: row.date,
-                    fullname: row.fullname,
-                    email: row.email,
-                    personal_ID: row.personal_ID,
-                    products: [] // Inicializa el array de productos
-                };
-            }
+// Group purchases by purchase_id
+purchases.forEach(row => {
+    if (!groupedPurchases[row.purchase_id]) {
+        groupedPurchases[row.purchase_id] = {
+            purchase_id: row.purchase_id,
+            date: row.date,
+            products: [] // Initialize product array
+        };
+    }
 
-            // Agregar el producto a la lista de productos
-            groupedPurchases[row.purchase_id].products.push({
-                product_id: row.product_id,
-                name: row.name,
-                amount: row.amount,
-                price: row.price
-            });
-        });
+    // Add product details
+    groupedPurchases[row.purchase_id].products.push({
+        product_id: row.product_id,
+        name: row.name,
+        amount: row.amount,
+        price: row.price
+    });
+});
 
-        // Convertir el objeto agrupado en un array
-        const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
-            ...purchase,
-            products: purchase.products
-                .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
-                .join('; ')
-        }));
+// Convert grouped data to a flat array for Excel
+const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
+    purchase_id: purchase.purchase_id,
+    date: purchase.date,
+    products: purchase.products
+        .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
+        .join('; ')
+}));
 
-        // Crear un nuevo libro de trabajo
-        const wb = XLSX.utils.book_new();
+// Prepare the Excel data
+const excelData = [
+    // Add user info as the first row
+    { Field: 'Full Name', Value: fullname },
+    { Field: 'Email', Value: email },
+    { Field: 'Personal ID', Value: personal_ID },
+    {}, // Add an empty row as a spacer
+    ...finalPurchases // Add grouped purchase data
+];
 
-        // Crear una hoja de trabajo desde los datos agrupados
-        const ws = XLSX.utils.json_to_sheet(finalPurchases, {
-            header: ['purchase_id', 'date', 'fullname', 'email', 'personal_ID', 'products']
-        });
+// Create a new workbook
+const wb = XLSX.utils.book_new();
 
-        // Ajustar el ancho de las columnas automáticamente
-        const columnWidths = Object.keys(finalPurchases[0]).map((key, index) => {
-            const maxLength = Math.max(
-                key.length, // Longitud del nombre de la columna
-                ...finalPurchases.map(row => (row[key] ? row[key].toString().length : 0)) // Longitud máxima del contenido
-            );
-            return { wch: maxLength + 2 }; // Agregar un poco de espacio adicional
-        });
+// Create worksheet for purchases
+const ws = XLSX.utils.json_to_sheet(excelData, {
+    header: ['Field', 'Value', 'purchase_id', 'date', 'products']
+});
 
-        ws['!cols'] = columnWidths;
+// Adjust column widths
+const columnWidths = [
+    { wch: 15 }, // Field
+    { wch: 30 }, // Value
+    { wch: 15 }, // purchase_id
+    { wch: 20 }, // date
+    { wch: 50 }  // products
+];
 
-        // Agregar la hoja de trabajo al libro
-        XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+ws['!cols'] = columnWidths;
 
-        // Convertir el libro a un buffer
-        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+// Append worksheet to workbook
+XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
 
-        // Configurar las cabeceras para la descarga
-        res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.send(excelBuffer);
+// Convert workbook to buffer
+const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+// Set headers for download
+res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
+res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+res.send(excelBuffer);
 
         return excelBuffer;
         
     } catch (error) {
         handleError(res, error);
         
+    }
+}
+static async PurchaseDataByUserPdf(req, res) {
+    const { userId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+    }
+    try {
+        const purchases = await PurchaseModel.getPurchasesByUserId(userId);
+
+        if (!purchases || purchases.length === 0) {
+            throw new Error('No purchases found');
+        }
+
+        // Group purchases
+        const groupedPurchases = {};
+        let userDetails = null; // Store user details separately
+        purchases.forEach(row => {
+            if (!userDetails) {
+                // Extract user details from the first row
+                userDetails = {
+                    fullname: row.fullname,
+                    username: row.username,
+                    personal_ID: row.personal_ID,
+                    email: row.email,
+                };
+            }
+
+            if (!groupedPurchases[row.purchase_id]) {
+                groupedPurchases[row.purchase_id] = {
+                    purchase_id: row.purchase_id,
+                    date: row.date,
+                    total: row.amount,
+                    products: [],
+                };
+            }
+            groupedPurchases[row.purchase_id].products.push({
+                Product_Id: row.product_id,
+                name: row.name,
+                quantity: row.quantity,
+                price: row.price,
+            });
+        });
+
+        const finalPurchases = Object.values(groupedPurchases);
+
+        const doc = new PDFDocument();
+        const stream = Readable.from(doc);
+
+        res.setHeader('Content-Disposition', 'attachment; filename="compras_data.pdf"');
+        res.setHeader('Content-Type', 'application/pdf');
+
+        // Render user information once at the top of the document
+        doc.fontSize(18).text('Purchase Data', { align: 'center' });
+        doc.moveDown(2);
+
+        doc.fontSize(12).fillColor('black')
+            .text(`Fullname: ${userDetails.fullname}`, 50)
+            .text(`Username: ${userDetails.username}`, 50, doc.y + 15)
+            .text(`Personal ID: ${userDetails.personal_ID}`, 50, doc.y + 15)
+            .text(`Email: ${userDetails.email}`, 50, doc.y + 15);
+
+        doc.moveDown(2); // Add some space before listing purchases
+
+        // Render purchases and products
+        let y = doc.y;
+
+        finalPurchases.forEach(purchase => {
+            // Render purchase details
+            doc.fontSize(12).fillColor('black')
+                .text(`Purchase ID: ${purchase.purchase_id}`, 50, y)
+                .text(`Date: ${new Date(purchase.date).toLocaleDateString()}`, 50, y + 15)
+                .text(`Total: ${purchase.total}`, 50, y + 30);
+
+            y += 50;
+
+            // Render product details for this purchase
+            doc.fontSize(10).text('Products:', 50, y);
+            y += 20;
+
+            purchase.products.forEach(product => {
+                doc.fontSize(10).fillColor('black')
+                    .text(`- Product ID: ${product.Product_Id}`, 70, y)
+                    .text(`Name: ${product.name}`, 200, y)
+                    .text(`Quantity: ${product.quantity}`, 350, y)
+                    .text(`Price: ${product.price}`, 450, y);
+                y += 20;
+
+                // Add spacing if too close to the bottom of the page
+                if (y > 700) {
+                    doc.addPage();
+                    y = 50;
+                }
+            });
+
+            y += 30; // Space between purchases
+        });
+
+        doc.end();
+        stream.pipe(res);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+static async PurchaseDataPdf(req, res) {
+    try {
+
+        const purchases = await PurchaseModel.getPurchases();
+console.log(purchases)
+        if (!purchases || purchases.length === 0) {
+            throw new Error('No purchases found');
+        }
+
+        // Agrupar las compras
+        const groupedPurchases = {};
+        purchases.forEach(row => {
+            if (!groupedPurchases[row.purchase_id]) {
+                groupedPurchases[row.purchase_id] = {
+                    Purchase_ID: row.purchase_id,
+                    date: row.date,
+                    total: row.amount,
+                    fullname: row.fullname,
+                    email: row.email,
+                    personal_ID: row.personal_ID,
+                   
+                    products: []
+                };
+            }
+            groupedPurchases[row.purchase_id].products.push({
+                product_id: row.product_id,
+                name: row.name,
+                Quantity: row.amount,
+                Price: row.price
+            });
+        });
+
+        const finalPurchases = Object.values(groupedPurchases);
+
+        console.log(finalPurchases);
+
+        const doc = new PDFDocument();
+        const stream = Readable.from(doc);
+
+        res.setHeader('Content-Disposition', 'attachment; filename="compras_data.pdf"');
+        res.setHeader('Content-Type', 'application/pdf');
+
+        doc.fontSize(18).text('Datos de Compras', { align: 'center' });
+        doc.moveDown(2);
+
+        const tableTop = doc.y;
+        const itemHeight = 20;
+        const tableWidth = 500;
+
+        // Cabeceras de la tabla
+        doc.fontSize(12).fillColor('black').text('Purchase ID', 50, tableTop);
+        doc.text('Fullname', 150, tableTop);
+        doc.text('Personal ID', 300, tableTop);
+      //  doc.text('Email', 300, tableTop);
+        doc.text('Total', 400, tableTop);
+        doc.text('Date', 500, tableTop);
+        
+        // Línea horizontal
+        doc.moveTo(50, tableTop + itemHeight).lineTo(550, tableTop + itemHeight).stroke();
+
+        let y = tableTop + itemHeight;
+
+        finalPurchases.forEach(purchase => {
+            doc.fontSize(10).fillColor('black')
+                .text(purchase.Purchase_ID, 50, y)
+                .text(purchase.fullname, 150, y)
+                .text(purchase.personal_ID, 300, y)
+//                .text(purchase.email, 300, y)
+                .text(purchase.total, 400, y)// Formatear total
+                .text(purchase.date, 500, y); 
+
+            y += itemHeight;
+
+            // Línea horizontal después de cada fila
+            doc.moveTo(50, y).lineTo(550, y).stroke();
+            y += itemHeight;
+
+            // Productos de cada compra
+            purchase.products.forEach(product => {
+                doc.text(`ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.Quantity}, Price: ${product.Price}`, 50, y);
+                y += itemHeight;
+            });
+
+            // Espaciado entre compras
+            y += itemHeight;
+
+             // Línea final
+        doc.moveTo(50, y).lineTo(550, y).stroke();
+        });
+
+        // Línea final
+        doc.moveTo(50, y).lineTo(550, y).stroke();
+
+        doc.end();
+        stream.pipe(res);
+
+    }catch(error){
+    handleError(res,error)
     }
 }
 }

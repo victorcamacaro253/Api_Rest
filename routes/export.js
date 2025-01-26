@@ -60,15 +60,15 @@ router.get('/Excel/purchases/:userId',exportData.PurchasesDataByUserExcel);
 
 router.get('/Excel/purchases/:id/dates',exportData.PurchaseDataByDateRangeUserExcel)
 
-/*
+
 //Ruta para exportar las compras por nombre de usuario en Pdf
 
-router.get('/PDF/purchases/name',exportData.exportComprasDataByNamePdf)
+router.get('/PDF/purchases/user/:userId',exportData.PurchaseDataByUserPdf)
 
 //Ruta para exportar todsas las compras en pdf
 
-router.get('/PDF/purchases',exportData.exportComprasDataPdf)
-
+router.get('/PDF/purchases',exportData.PurchaseDataPdf)    
+/*
 //Ruta para exportar las compras por fecha en pdf
 
 router.get('/PDF/purchases/date',exportData.exportComprasByDatePdf)
