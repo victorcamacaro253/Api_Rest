@@ -518,7 +518,7 @@ class exportData{
 
 
 
-   static async PurchasesDataByUserExcel(req,res){
+/*   static async PurchasesDataByUserExcel(req,res){
       const {userId} = req.params
     
       try {
@@ -598,10 +598,97 @@ class exportData{
         handleError(res, error);
     }
    }
+*/
+static async PurchasesDataByUserExcel(req, res) {
+    const { userId } = req.params;
+
+    try {
+        const purchases = await PurchaseModel.getPurchasesByUserId(userId);
+        console.log(purchases);
+
+        if (!purchases || purchases.length === 0) {
+            throw new Error('No purchases found');
+        }
+
+        // Extract unique user data
+        const { fullname, email, personal_ID } = purchases[0]; // Assume all rows have the same user data
+        const groupedPurchases = {};
+
+        // Group purchases by purchase_id
+        purchases.forEach(row => {
+            if (!groupedPurchases[row.purchase_id]) {
+                groupedPurchases[row.purchase_id] = {
+                    purchase_id: row.purchase_id,
+                    date: row.date,
+                    products: [] // Initialize product array
+                };
+            }
+
+            // Add product details
+            groupedPurchases[row.purchase_id].products.push({
+                product_id: row.product_id,
+                name: row.name,
+                amount: row.amount,
+                price: row.price
+            });
+        });
+
+        // Convert grouped data to a flat array for Excel
+        const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
+            purchase_id: purchase.purchase_id,
+            date: purchase.date,
+            products: purchase.products
+                .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
+                .join('; ')
+        }));
+
+        // Prepare the Excel data
+        const excelData = [
+            // Add user info as the first row
+            { Field: 'Full Name', Value: fullname },
+            { Field: 'Email', Value: email },
+            { Field: 'Personal ID', Value: personal_ID },
+            {}, // Add an empty row as a spacer
+            ...finalPurchases // Add grouped purchase data
+        ];
+
+        // Create a new workbook
+        const wb = XLSX.utils.book_new();
+
+        // Create worksheet for purchases
+        const ws = XLSX.utils.json_to_sheet(excelData, {
+            header: ['Field', 'Value', 'purchase_id', 'date', 'products']
+        });
+
+        // Adjust column widths
+        const columnWidths = [
+            { wch: 15 }, // Field
+            { wch: 30 }, // Value
+            { wch: 15 }, // purchase_id
+            { wch: 20 }, // date
+            { wch: 50 }  // products
+        ];
+
+        ws['!cols'] = columnWidths;
+
+        // Append worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+
+        // Convert workbook to buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        // Set headers for download
+        res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+    } catch (error) {
+        handleError(res, error);
+    }
+}
 
 
    static async PurchaseDataByDateRange(req,res){
-    console.log(req.query)
     const {startDate,endDate}= req.query;
     console.log(startDate,endDate)
 
