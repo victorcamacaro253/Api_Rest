@@ -58,7 +58,7 @@ router.get('/Excel/purchases/:userId',exportData.PurchasesDataByUserExcel);
 
 //Ruta para exportar las compras por fecha para el usuario en excel
 
-router.get('/export/Excel/purchases/:id/userFecha',exportData.exportComprasUserDate)
+router.get('/Excel/purchases/:id/dates',exportData.PurchaseDataByDateRangeUserExcel)
 
 /*
 //Ruta para exportar las compras por nombre de usuario en Pdf

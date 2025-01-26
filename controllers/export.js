@@ -784,6 +784,100 @@ static async PurchasesDataByUserExcel(req, res) {
    }
 
 
+   static async  PurchaseDataByDateRangeUserExcel(req,res){
+    const {id} = req.params;
+    const {dateFrom, dateTo} = req.query;
+//console.log(id,dateFrom,dateTo)
+    if(!dateFrom || !dateTo){
+        return res.status(400).json({ error: 'Missing date range' });
+    }
+
+    const formattedDateFrom = new Date(dateFrom);
+    const formattedDateTo = new Date(dateTo);
+    
+    if(isNaN(formattedDateFrom) || isNaN(formattedDateTo)){
+        return res.status(400).json({ error: 'Invalid date range' });
+    }
+
+    try {
+        const purchases = await PurchaseModel.getPurchasesByUserDate(id, formattedDateFrom, formattedDateTo);
+console.log(purchases)
+        if (!Array.isArray(purchases)) {
+            return res.status(500).json({ error: 'Unexpected response format' });
+        }
+        
+        
+
+        // Agrupar las compras
+        const groupedPurchases = {};
+
+        purchases.forEach(row => {
+            if (!groupedPurchases[row.purchase_id]) {
+                // Si aún no existe la compra, la crea
+                groupedPurchases[row.purchase_id] = {
+                    purchase_id: row.purchase_id,
+                    date: row.date,
+                    fullname: row.fullname,
+                    email: row.email,
+                    personal_ID: row.personal_ID,
+                    products: [] // Inicializa el array de productos
+                };
+            }
+
+            // Agregar el producto a la lista de productos
+            groupedPurchases[row.purchase_id].products.push({
+                product_id: row.product_id,
+                name: row.name,
+                amount: row.amount,
+                price: row.price
+            });
+        });
+
+        // Convertir el objeto agrupado en un array
+        const finalPurchases = Object.values(groupedPurchases).map(purchase => ({
+            ...purchase,
+            products: purchase.products
+                .map(product => `ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.amount}, Price: ${product.price}`)
+                .join('; ')
+        }));
+
+        // Crear un nuevo libro de trabajo
+        const wb = XLSX.utils.book_new();
+
+        // Crear una hoja de trabajo desde los datos agrupados
+        const ws = XLSX.utils.json_to_sheet(finalPurchases, {
+            header: ['purchase_id', 'date', 'fullname', 'email', 'personal_ID', 'products']
+        });
+
+        // Ajustar el ancho de las columnas automáticamente
+        const columnWidths = Object.keys(finalPurchases[0]).map((key, index) => {
+            const maxLength = Math.max(
+                key.length, // Longitud del nombre de la columna
+                ...finalPurchases.map(row => (row[key] ? row[key].toString().length : 0)) // Longitud máxima del contenido
+            );
+            return { wch: maxLength + 2 }; // Agregar un poco de espacio adicional
+        });
+
+        ws['!cols'] = columnWidths;
+
+        // Agregar la hoja de trabajo al libro
+        XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+
+        // Convertir el libro a un buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        // Configurar las cabeceras para la descarga
+        res.setHeader('Content-Disposition', 'attachment; filename="purchases_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+        return excelBuffer;
+        
+    } catch (error) {
+        handleError(res, error);
+        
+    }
+}
 }
 
 export default exportData
