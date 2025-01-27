@@ -28,7 +28,7 @@ class exportData{
             const users= await UserModel.getAllUsers();
         
             if(!users  || users.length === 0){
-            throw new Error('No users found');
+              return res.status(404).json({message: 'No users found'});
             }
         
             //Create a new workbook
@@ -138,8 +138,8 @@ class exportData{
         try {
             const users= await UserModel.getUserByUsername(n)
             if(!users  || users.length === 0){
-                throw new Error('No users found');
-                }
+          return res.status(404).json({message:'No users found'});
+            }
             
                 //Create a new workbook
                 const wb= XLSX.utils.book_new();
@@ -316,7 +316,7 @@ class exportData{
     
     
         if (!users || users.length === 0) {
-            throw new Error('No users found');
+       return res.status(404).json({ message: 'No users found' });
         }
     
         const fields= ['user_id','fullname','username','email','personal ID','phone','role',"name"]
@@ -340,7 +340,7 @@ class exportData{
     
     
         if (!users || users.length === 0) {
-            throw new Error('No users found');
+   return res.status(404).send({ message: 'No users found' });
         }
     
         const fields= ['user_id','fullname','username','email','personal_ID','phone','role_name']
@@ -363,7 +363,7 @@ class exportData{
         console.log(purchases);
 
         if (!purchases || purchases.length === 0) {
-            throw new Error('No purchases found');
+      return res.status(404).send({ message: 'No purchases found' });
         }
 
         // Agrupar las compras
@@ -443,7 +443,7 @@ class exportData{
         console.log(purchases);
 
         if (!purchases || purchases.length === 0) {
-            throw new Error('No purchases found');
+       return res.status(404).json({ message: 'No purchases were found' });
         }
 
         // Agrupar las compras
@@ -607,7 +607,7 @@ static async PurchasesDataByUserExcel(req, res) {
         console.log(purchases);
 
         if (!purchases || purchases.length === 0) {
-            throw new Error('No purchases found');
+       return res.status(404).json({error:'No purchases found'})
         }
 
         // Extract unique user data
@@ -709,7 +709,7 @@ static async PurchasesDataByUserExcel(req, res) {
        console.log(purchases);
 
         if (!purchases || purchases.length === 0) {
-            throw new Error('No purchases found');
+       return res.status(404).json({error:'No purchases were found'})
         }
 
         // Agrupar las compras
@@ -803,7 +803,7 @@ static async PurchasesDataByUserExcel(req, res) {
         const purchases = await PurchaseModel.getPurchasesByUserDate(id, formattedDateFrom, formattedDateTo);
 console.log(purchases)
 if (!purchases || purchases.length === 0) {
-    throw new Error('No purchases found');
+    return res.status(404).json({ error: 'No purchases found for the given date range and user' });
 }
 
 // Extract unique user data
@@ -895,7 +895,7 @@ static async PurchaseDataByUserPdf(req, res) {
         const purchases = await PurchaseModel.getPurchasesByUserId(userId);
 
         if (!purchases || purchases.length === 0) {
-            throw new Error('No purchases found');
+        return res.status(404).json({ error: 'No purchases found for the user' });
         }
 
         // Group purchases
@@ -997,7 +997,7 @@ static async PurchaseDataPdf(req, res) {
         const purchases = await PurchaseModel.getPurchases();
 console.log(purchases)
         if (!purchases || purchases.length === 0) {
-            throw new Error('No purchases found');
+      return res.status(404).json({ message: 'No purchases found' });
         }
 
         // Agrupar las compras
@@ -1091,6 +1091,112 @@ console.log(purchases)
     handleError(res,error)
     }
 }
+
+
+static async PurchaseDataByDateRangePdf(req,res){
+    try{
+        const {dateFrom, dateTo} = req.query;
+
+     const purchases = await PurchaseModel.getPurchasesByDateRange(dateFrom, dateTo);
+
+     if (!purchases || purchases.length === 0) {
+        return res.status(404).send({ message: 'No purchases found for the given date range.' });
+    }
+
+    // Agrupar las compras
+    const groupedPurchases = {};
+    purchases.forEach(row => {
+        if (!groupedPurchases[row.purchase_id]) {
+            groupedPurchases[row.purchase_id] = {
+                Purchase_ID: row.purchase_id,
+                date: row.date,
+                total: row.amount,
+                fullname: row.fullname,
+                email: row.email,
+                personal_ID: row.personal_ID,
+               
+                products: []
+            };
+        }
+        groupedPurchases[row.purchase_id].products.push({
+            product_id: row.product_id,
+            name: row.name,
+            Quantity: row.amount,
+            Price: row.price
+        });
+    });
+
+    const finalPurchases = Object.values(groupedPurchases);
+
+    console.log(finalPurchases);
+
+    const doc = new PDFDocument();
+    const stream = Readable.from(doc);
+
+    res.setHeader('Content-Disposition', 'attachment; filename="compras_data.pdf"');
+    res.setHeader('Content-Type', 'application/pdf');
+
+    doc.fontSize(18).text(`Purchases from ${dateFrom} until ${dateTo}`, { align: 'center' });
+
+    doc.moveDown(2);
+
+    const tableTop = doc.y;
+    const itemHeight = 20;
+    const tableWidth = 500;
+
+    // Cabeceras de la tabla
+    doc.fontSize(12).fillColor('black').text('Purchase ID', 50, tableTop);
+    doc.text('Fullname', 150, tableTop);
+    doc.text('Personal ID', 300, tableTop);
+  //  doc.text('Email', 300, tableTop);
+    doc.text('Total', 400, tableTop);
+    doc.text('Date', 500, tableTop);
+    
+    // Línea horizontal
+    doc.moveTo(50, tableTop + itemHeight).lineTo(550, tableTop + itemHeight).stroke();
+
+    let y = tableTop + itemHeight;
+
+    finalPurchases.forEach(purchase => {
+        doc.fontSize(10).fillColor('black')
+            .text(purchase.Purchase_ID, 50, y)
+            .text(purchase.fullname, 150, y)
+            .text(purchase.personal_ID, 300, y)
+//                .text(purchase.email, 300, y)
+            .text(purchase.total, 400, y)// Formatear total
+            .text(purchase.date, 500, y); 
+
+        y += itemHeight;
+
+        // Línea horizontal después de cada fila
+        doc.moveTo(50, y).lineTo(550, y).stroke();
+        y += itemHeight;
+
+        // Productos de cada compra
+        purchase.products.forEach(product => {
+            doc.text(`ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.Quantity}, Price: ${product.Price}`, 50, y);
+            y += itemHeight;
+        });
+
+        // Espaciado entre compras
+        y += itemHeight;
+
+         // Línea final
+    doc.moveTo(50, y).lineTo(550, y).stroke();
+    });
+
+    // Línea final
+    doc.moveTo(50, y).lineTo(550, y).stroke();
+
+    doc.end();
+    stream.pipe(res);
+
+    }catch(error){
+        handleError(res,error)
+    }
+
+}
+
 }
 
 export default exportData

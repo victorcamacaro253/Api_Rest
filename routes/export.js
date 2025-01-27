@@ -68,11 +68,11 @@ router.get('/PDF/purchases/user/:userId',exportData.PurchaseDataByUserPdf)
 //Ruta para exportar todsas las compras en pdf
 
 router.get('/PDF/purchases',exportData.PurchaseDataPdf)    
-/*
+
 //Ruta para exportar las compras por fecha en pdf
 
-router.get('/PDF/purchases/date',exportData.exportComprasByDatePdf)
-
+router.get('/PDF/purchases/date',exportData.PurchaseDataByDateRangePdf)
+/*
 //Ruta para exportar las compras por fecha para el usuario en pdf
 
 router.get('/PDF/compras/:id/userFecha',exportData.exportComprasUserDatePdf)
