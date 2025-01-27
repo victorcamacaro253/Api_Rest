@@ -72,14 +72,15 @@ router.get('/PDF/purchases',exportData.PurchaseDataPdf)
 //Ruta para exportar las compras por fecha en pdf
 
 router.get('/PDF/purchases/date',exportData.PurchaseDataByDateRangePdf)
-/*
+
 //Ruta para exportar las compras por fecha para el usuario en pdf
 
-router.get('/PDF/compras/:id/userFecha',exportData.exportComprasUserDatePdf)
+router.get('/PDF/purchases/:id/user',exportData.PurchaseDataByDateRangeUserPdf)
 
-router.get('/PDF/products',exportData.exportProductsPdf)
+router.get('/PDF/products',exportData.ProductsDataPdf)
 
-router.get('/Excel/products',exportData.exportProducts)
 
-*/
+router.get('/Excel/products',exportData.ProductsDataExcel)
+
+
 export default router

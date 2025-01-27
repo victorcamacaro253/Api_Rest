@@ -1,5 +1,6 @@
 import UserModel from '../models/user.js';
 import PurchaseModel from '../models/purchase.js';
+import ProductModel from '../models/product.js';
 import handleError from '../utils/handleError.js';
 import XLSX from 'xlsx';
 import PDFDocument from 'pdfkit';
@@ -1195,6 +1196,276 @@ static async PurchaseDataByDateRangePdf(req,res){
         handleError(res,error)
     }
 
+}
+
+
+static async PurchaseDataByDateRangeUserPdf(req,res){
+   const {id} = req.params;
+   const {dateFrom,dateTo} = req.query;
+   try {
+    const purchases = await PurchaseModel.getPurchasesByUserDate(id,dateFrom,dateTo);
+    
+    if (!purchases || purchases.length === 0) {
+        return res.status(404).send({ message: 'No purchases found for the given date range.' });
+    }
+
+    // Agrupar las compras
+    const groupedPurchases = {};
+    purchases.forEach(row => {
+        if (!groupedPurchases[row.purchase_id]) {
+            groupedPurchases[row.purchase_id] = {
+                Purchase_ID: row.purchase_id,
+                date: row.date,
+                total: row.amount,
+                fullname: row.fullname,
+                email: row.email,
+                personal_ID: row.personal_ID,
+               
+                products: []
+            };
+        }
+        groupedPurchases[row.purchase_id].products.push({
+            product_id: row.product_id,
+            name: row.name,
+            Quantity: row.amount,
+            Price: row.price
+        });
+    });
+
+    const finalPurchases = Object.values(groupedPurchases);
+
+    console.log(finalPurchases);
+
+    const doc = new PDFDocument();
+    const stream = Readable.from(doc);
+
+    res.setHeader('Content-Disposition', 'attachment; filename="compras_data.pdf"');
+    res.setHeader('Content-Type', 'application/pdf');
+
+    doc.fontSize(18).text(`Purchases from ${dateFrom} until ${dateTo}`, { align: 'center' });
+
+    doc.moveDown(2);
+
+    const tableTop = doc.y;
+    const itemHeight = 20;
+    const tableWidth = 500;
+
+    // Cabeceras de la tabla
+    doc.fontSize(12).fillColor('black').text('Purchase ID', 50, tableTop);
+    doc.text('Fullname', 150, tableTop);
+    doc.text('Personal ID', 300, tableTop);
+  //  doc.text('Email', 300, tableTop);
+    doc.text('Total', 400, tableTop);
+    doc.text('Date', 500, tableTop);
+    
+    // Línea horizontal
+    doc.moveTo(50, tableTop + itemHeight).lineTo(550, tableTop + itemHeight).stroke();
+
+    let y = tableTop + itemHeight;
+
+    finalPurchases.forEach(purchase => {
+        doc.fontSize(10).fillColor('black')
+            .text(purchase.Purchase_ID, 50, y)
+            .text(purchase.fullname, 150, y)
+            .text(purchase.personal_ID, 300, y)
+//                .text(purchase.email, 300, y)
+            .text(purchase.total, 400, y)// Formatear total
+            .text(purchase.date, 500, y); 
+
+        y += itemHeight;
+
+        // Línea horizontal después de cada fila
+        doc.moveTo(50, y).lineTo(550, y).stroke();
+        y += itemHeight;
+
+        // Productos de cada compra
+        purchase.products.forEach(product => {
+            doc.text(`ID: ${product.product_id}, Name: ${product.name}, Quantity: ${product.Quantity}, Price: ${product.Price}`, 50, y);
+            y += itemHeight;
+        });
+
+        // Espaciado entre compras
+        y += itemHeight;
+
+         // Línea final
+    doc.moveTo(50, y).lineTo(550, y).stroke();
+    });
+
+    // Línea final
+    doc.moveTo(50, y).lineTo(550, y).stroke();
+
+    doc.end();
+    stream.pipe(res);
+
+
+   } catch (error) {
+    handleError(res,error)
+    
+   }
+}
+
+static async ProductsDataPdf(req,res){
+    try {
+        
+        const products = await ProductModel.getAllProducts()    
+
+        if(!products || products.length === 0){
+            return res.status(404).json({message:'No products found'})
+        }
+        const doc = new PDFDocument();
+        const stream = Readable.from(doc);
+
+        res.setHeader('Content-Disposition', 'attachment; filename="productos_data.pdf"');
+        res.setHeader('Content-Type', 'application/pdf');
+
+        doc.fontSize(18).text('Product Data', { align: 'center' });
+        doc.moveDown(2);
+
+        const tableTop = doc.y;
+        const itemHeight = 20;
+
+        // Cabeceras de la tabla
+        doc.fontSize(10).fillColor('black')
+            .text('Product ID', 50, tableTop)
+            .text('Code', 120, tableTop)
+            .text('Name', 250, tableTop)
+            .text('Description', 350, tableTop)
+            .text('Price', 500, tableTop)
+          //  .text('Stock', 550, tableTop)
+           // .text('Total sold', 600, tableTop)
+            .text('Status', 550, tableTop)
+            .text('Category', 700, tableTop);
+
+        // Línea horizontal
+        doc.moveTo(50, tableTop + itemHeight).lineTo(750, tableTop + itemHeight).stroke();
+
+        let y = tableTop + itemHeight;
+
+        products.forEach(product => {
+            doc.fontSize(10).fillColor('black')
+                .text(product.product_id, 50, y)
+                .text(product.code, 120, y)
+                .text(product.name, 250, y)
+                .text(product.description, 350, y)
+                .text(product.price, 500, y)
+               // .text(product.stock, 550, y)
+               // .text(product.total_sold, 600, y)
+                .text(product.status, 550, y)
+                .text(product.category, 700, y);
+
+            y += itemHeight;
+
+            // Línea horizontal después de cada fila
+            doc.moveTo(50, y).lineTo(750, y).stroke();
+            y += itemHeight;
+        });
+
+        // Línea final
+        doc.moveTo(50, y).lineTo(750, y).stroke();
+
+        doc.end();
+        stream.pipe(res);
+
+    }catch(error){
+        handleError(res,error)
+    }
+
+}
+
+/*
+static async ProductsDataExcel(req,res){
+    try {
+        
+        const products = await ProductModel.getAllProducts()    
+
+        if(!products || products.length === 0){
+            return res.status(404).json({message:'No products found'})
+        }
+        const wb = XLSX.utils.book_new();
+
+        const ws = XLSX.utils.json_to_sheet(products, {
+            header: ['product_id', 'code', 'name', 'description', 'price', 'status', 'category']
+        });
+
+        const columnWidths = Object.keys(products[0]).map((key, index) => {
+            const maxLength = Math.max(
+                key.length, // Longitud del nombre de la columna
+                ...products.map(row => (row[key] ? row[key].toString().length : 0)) // Longitud máxima del contenido
+            );
+            return { wch: maxLength + 2 }; // Agregar un poco de espacio adicional
+        });
+
+        ws['!cols'] = columnWidths;
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Products');
+
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        res.setHeader('Content-Disposition', 'attachment; filename="productos_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+    }catch(error){
+        handleError(res,error)
+    }
+}
+    */
+static async ProductsDataExcel(req, res) {
+    try {
+        const products = await ProductModel.getAllProducts();
+
+        if (!products || products.length === 0) {
+            return res.status(404).json({ message: 'No products found' });
+        }
+
+        const wb = XLSX.utils.book_new();
+
+        // Create an empty worksheet
+        const ws = XLSX.utils.aoa_to_sheet([]);
+
+        // Add the title
+        XLSX.utils.sheet_add_aoa(ws, [["Product List"]], { origin: 'A1' });
+
+        // Merge cells for the title and center it
+        const columnCount = 7; // Total number of columns (adjust based on your headers)
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: columnCount - 1 } }]; // Merge cells from A1 to G1
+        ws['A1'].s = {
+            alignment: { horizontal: 'center', vertical: 'center' },
+            font: { bold: true, sz: 14 }, // Styling for the title
+        };
+
+        // Add headers
+        const headers = ['product_id', 'code', 'name', 'description', 'price', 'status', 'category'];
+        XLSX.utils.sheet_add_aoa(ws, [headers], { origin: 'A2' });
+
+        // Add product data
+        XLSX.utils.sheet_add_json(ws, products, { origin: 'A3', header: headers, skipHeader: true });
+
+        // Adjust column widths
+        const columnWidths = headers.map((key, index) => {
+            const maxLength = Math.max(
+                key.length, // Length of the header name
+                ...products.map(row => (row[key] ? row[key].toString().length : 0)) // Max length of the content
+            );
+            return { wch: maxLength + 2 }; // Add some extra space
+        });
+
+        ws['!cols'] = columnWidths;
+
+        // Add the worksheet to the workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Products');
+
+        // Generate the Excel file
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+        // Set response headers and send the file
+        res.setHeader('Content-Disposition', 'attachment; filename="productos_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+
+    } catch (error) {
+        handleError(res, error);
+    }
 }
 
 }
