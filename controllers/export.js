@@ -1304,74 +1304,72 @@ static async PurchaseDataByDateRangeUserPdf(req,res){
    }
 }
 
-static async ProductsDataPdf(req,res){
+static async ProductsDataPdf(req, res) {
     try {
-        
-        const products = await ProductModel.getAllProducts()    
+        const products = await ProductModel.getAllProducts();
 
-        if(!products || products.length === 0){
-            return res.status(404).json({message:'No products found'})
+        if (!products || products.length === 0) {
+            return res.status(404).json({ message: 'No products found' });
         }
+
         const doc = new PDFDocument();
         const stream = Readable.from(doc);
 
-        res.setHeader('Content-Disposition', 'attachment; filename="productos_data.pdf"');
+        const fileName = `products_${new Date().toISOString().split('T')[0]}.pdf`;
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.setHeader('Content-Type', 'application/pdf');
 
+        // Title
         doc.fontSize(18).text('Product Data', { align: 'center' });
         doc.moveDown(2);
 
         const tableTop = doc.y;
         const itemHeight = 20;
 
-        // Cabeceras de la tabla
+        // Table Headers
         doc.fontSize(10).fillColor('black')
             .text('Product ID', 50, tableTop)
             .text('Code', 120, tableTop)
             .text('Name', 250, tableTop)
             .text('Description', 350, tableTop)
             .text('Price', 500, tableTop)
-          //  .text('Stock', 550, tableTop)
-           // .text('Total sold', 600, tableTop)
             .text('Status', 550, tableTop)
             .text('Category', 700, tableTop);
 
-        // Línea horizontal
+        // Horizontal line
         doc.moveTo(50, tableTop + itemHeight).lineTo(750, tableTop + itemHeight).stroke();
 
         let y = tableTop + itemHeight;
 
-        products.forEach(product => {
-            doc.fontSize(10).fillColor('black')
+        // Table Rows
+        products.forEach((product, index) => {
+            if (index % 2 === 0) {
+                doc.fillColor('#f0f0f0').rect(50, y, 700, itemHeight).fill();
+            }
+            doc.fillColor('black')
                 .text(product.product_id, 50, y)
                 .text(product.code, 120, y)
                 .text(product.name, 250, y)
                 .text(product.description, 350, y)
                 .text(product.price, 500, y)
-               // .text(product.stock, 550, y)
-               // .text(product.total_sold, 600, y)
                 .text(product.status, 550, y)
                 .text(product.category, 700, y);
-
+        
             y += itemHeight;
-
-            // Línea horizontal después de cada fila
             doc.moveTo(50, y).lineTo(750, y).stroke();
             y += itemHeight;
         });
 
-        // Línea final
+        // Final horizontal line
         doc.moveTo(50, y).lineTo(750, y).stroke();
 
         doc.end();
         stream.pipe(res);
 
-    }catch(error){
-        handleError(res,error)
+    } catch (error) {
+        handleError(res, error);
     }
-
 }
-
 /*
 static async ProductsDataExcel(req,res){
     try {
@@ -1419,37 +1417,45 @@ static async ProductsDataExcel(req, res) {
         }
 
         const wb = XLSX.utils.book_new();
-
-        // Create an empty worksheet
         const ws = XLSX.utils.aoa_to_sheet([]);
 
         // Add the title
         XLSX.utils.sheet_add_aoa(ws, [["Product List"]], { origin: 'A1' });
 
         // Merge cells for the title and center it
-        const columnCount = 7; // Total number of columns (adjust based on your headers)
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: columnCount - 1 } }]; // Merge cells from A1 to G1
+        const columnCount = 7; // Total number of columns
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: columnCount - 1 } }];
         ws['A1'].s = {
             alignment: { horizontal: 'center', vertical: 'center' },
-            font: { bold: true, sz: 14 }, // Styling for the title
+            font: { bold: true, sz: 14 },
         };
 
         // Add headers
         const headers = ['product_id', 'code', 'name', 'description', 'price', 'status', 'category'];
         XLSX.utils.sheet_add_aoa(ws, [headers], { origin: 'A2' });
 
+        // Style headers
+        headers.forEach((header, index) => {
+            const cellAddress = XLSX.utils.encode_cell({ r: 1, c: index });
+            if (!ws[cellAddress]) ws[cellAddress] = {};
+            ws[cellAddress].s = {
+                font: { bold: true },
+                alignment: { horizontal: 'center' },
+                fill: { fgColor: { rgb: "D3D3D3" } } // Light gray background
+            };
+        });
+
         // Add product data
         XLSX.utils.sheet_add_json(ws, products, { origin: 'A3', header: headers, skipHeader: true });
 
         // Adjust column widths
-        const columnWidths = headers.map((key, index) => {
+        const columnWidths = headers.map((key) => {
             const maxLength = Math.max(
-                key.length, // Length of the header name
-                ...products.map(row => (row[key] ? row[key].toString().length : 0)) // Max length of the content
+                key.length,
+                ...products.map(row => row[key] ? row[key].toString().length : 0)
             );
-            return { wch: maxLength + 2 }; // Add some extra space
+            return { wch: Math.min(maxLength + 2, 50) }; // Add a max limit to avoid excessively wide columns
         });
-
         ws['!cols'] = columnWidths;
 
         // Add the worksheet to the workbook
@@ -1459,7 +1465,8 @@ static async ProductsDataExcel(req, res) {
         const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
 
         // Set response headers and send the file
-        res.setHeader('Content-Disposition', 'attachment; filename="productos_data.xlsx"');
+        const fileName = `products_${new Date().toISOString().split('T')[0]}.xlsx`;
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.send(excelBuffer);
 

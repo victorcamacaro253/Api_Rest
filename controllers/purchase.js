@@ -10,6 +10,10 @@ class Purchase {
         try {
             const purchase = await PurchaseModel.getPurchases();
 
+            if (!purchase || purchase.length === 0) {
+                return res.status(404).json({ message: 'No purchases found' });
+            }
+
             const groupPurchase = new Map();
 
             for (const row of purchase) {
