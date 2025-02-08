@@ -58,15 +58,15 @@ class UserModel{
 
   static  async addUserGoogle({ googleId, username, email, image }) {
     console.log(googleId,username)
-    const SQL = `INSERT INTO users (google_id, username, email,role , image) VALUES (?,?,?,3,?)`;
+    const SQL = `INSERT INTO users (google_id, username, email,role, image) VALUES (?,?,?,3,?)`;
         const result = await query(SQL,
             [googleId, username, email, image]
         );
-    
+    console.log(result.insertId)
      // Ahora, busca el usuario insertado usando su ID
      const SQL2='SELECT * FROM users WHERE user_id = ?';
   const insertedUser = await query(SQL2, [result.insertId]);
-    //console.log(insertedUser[0])
+    console.log(insertedUser[0])
   return insertedUser[0]; // Asegúrate de retornar solo el primer resultado
     }
 

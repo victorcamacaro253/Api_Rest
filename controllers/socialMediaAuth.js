@@ -38,8 +38,7 @@ async (accessToken,refreshToken,profile,done)=>{
                 console.log('Creando un nuevo usuario:', newUser);
 
             
-            const createUser = UserModel.addUserGoogle(newUser) 
-
+            const createUser = await UserModel.addUserGoogle(newUser) 
             return done(null,createUser)
         }
         
