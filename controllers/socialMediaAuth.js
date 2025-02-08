@@ -65,7 +65,7 @@ passport.use(new FacebookStrategy({
       // Verificar si el usuario ya existe
       console.log(profile.id)
       let user = await UserModel.getUserByFacebookId(profile.id);
-
+console.log(user)
       if (user) {
         // Usuario ya existe, continuar
         return done(null, user);
@@ -78,7 +78,8 @@ passport.use(new FacebookStrategy({
           image: profile.photos[0].value
         };
 
-        user = await UserModel.addUserFacebook(newUser);
+        console.log(newUser)
+        user = await UserModel.addUserFacebook(newUser);  
         return done(null, user);
       }
     } catch (error) {

@@ -58,7 +58,7 @@ class UserModel{
 
   static  async addUserGoogle({ googleId, username, email, image }) {
     console.log(googleId,username)
-    const SQL = `INSERT INTO users (google_id, username, email, image) VALUES (?,?,?,?)`;
+    const SQL = `INSERT INTO users (google_id, username, email,role , image) VALUES (?,?,?,3,?)`;
         const result = await query(SQL,
             [googleId, username, email, image]
         );
@@ -73,7 +73,7 @@ class UserModel{
 
 
    static async addUserFacebook({ facebook_id, username, email, image }) {
-    const SQL='INSERT INTO users (facebook_id, username, email, image) VALUES (?, ?, ?, ?)'
+    const SQL='INSERT INTO users (facebook_id, username, email, role,image) VALUES (?, ?, ?,3,?)'
         const result = await query(SQL,
             [facebook_id, username, email, image]
         );
@@ -86,7 +86,7 @@ class UserModel{
     }
 
    static async addUserGithub({ github_id, username, email, image }) {
-    const SQL='INSERT INTO users (github_id, username, email, image) VALUES (?, ?, ?, ?)'
+    const SQL='INSERT INTO users (github_id, username, email,role , image) VALUES (?, ?, ?,3 , ?)'
         const result = await query(SQL,
             [github_id, username, email, image]
         );
@@ -100,7 +100,7 @@ class UserModel{
 
     
    static async addUserTwitter({ twitter_id, username, email, image }) {
-        const SQL=`INSERT INTO users (twitter_id, username, email, image) VALUES (?, ?, ?, ?)`
+        const SQL=`INSERT INTO users (twitter_id, username, email,role, image) VALUES (?, ?, ?, 3,?)`
         const result = await query(SQL,
             [twitter_id, username, email, image]
         );
