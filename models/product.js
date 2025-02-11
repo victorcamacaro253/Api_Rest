@@ -20,6 +20,12 @@ class ProductModel{
         return result;
     }
 
+    
+static async existingProduct(name){
+    const SQL='SELECT product_id FROM products WHERE name = ?';
+    const result = await query(SQL, [name]);
+    return result.length > 0;
+}
 
         static async updateProduct(productId, updateFields, values) {
             try {

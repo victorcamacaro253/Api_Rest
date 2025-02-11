@@ -8,6 +8,7 @@ import csrf from '../middleware/csrfToken.js'
 import cookieParser from 'cookie-parser';
 import apiKey from './apiKey.js'
 import exportRoutes from './export.js'
+import importRoutes from './import.js'
 
 
 
@@ -32,6 +33,8 @@ router.use('/auth',authentication)
 router.use('/export',exportRoutes)
 
 router.use('/apiKey',apiKey)
+
+router.use('/import',importRoutes)
 
 
 
