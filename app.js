@@ -3,7 +3,6 @@ import helmet from 'helmet';
 import routes from './routes/index.js';
 import authentication from './routes/authRoutes.js'
 import limiter from './middleware/rateLimiter.js';
-
 import cors from 'cors';
 import morgan from 'morgan';
 import session from 'express-session';
@@ -13,6 +12,7 @@ import './controllers/socialMediaAuth.js';  // Asegúrate de que se configure pa
 
 
 const app = express()
+
 
 app.use(json())
 
