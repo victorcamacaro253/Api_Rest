@@ -79,7 +79,7 @@ static async existingProduct(name){
         }
         
     static async getProductsByCategory(categoryId){
-        const SQL = 'SELECT p.product_id,p.code,p.name,p.description,p.price,p.image,p.status,c.name as category FROM products p JOIN categories c ON p.category_id=c.id WHERE c.name=?';
+        const SQL = 'SELECT p.product_id,p.code,p.name,p.description,p.price,p.image,p.status,c.name as category FROM products p JOIN categories c ON p.category_id=c.id WHERE c.id=?';
         const result = await query(SQL, [categoryId]);
         return result;
     }
