@@ -10,7 +10,18 @@ import apiKey from './apiKey.js'
 import exportRoutes from './export.js'
 import importRoutes from './import.js'
 
-
+/**
+ * @swagger
+ * tags:
+ *   - name: Users
+ *     description: User management
+ *   - name: Products
+ *     description: Product management
+ *   - name: Purchases
+ *     description: Purchase management
+ *   - name: Auth
+ *     description: Authentication
+ */
 
 
 const router= Router()

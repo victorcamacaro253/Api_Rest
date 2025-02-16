@@ -86,6 +86,66 @@ class Cart {
         handleError(res,error)
     }
 }
+
+static async clearCart(req, res) {
+    try {
+        const { cartId } = req.params;
+        await cartModel.deleteAllItems(cartId);
+        res.json({ message: 'Cart cleared successfully' });
+    } catch (error) {
+        handleError(res, error);
+    }
+}
+
+static async removeItem(req, res) {
+    try {
+        const { cartId, productId } = req.params;
+        await cartModel.deleteItem(cartId, productId);
+        res.json({ message: 'Item removed from cart' });
+    } catch (error) {
+        handleError(res, error);
+    }
+}
+
+static async updateItemQuantity(req, res) {
+    try {
+        const { cartId, productId } = req.params;
+        const { quantity } = req.body;
+        await cartModel.updateQuantity(cartId, productId, quantity);
+        res.json({ message: 'Item quantity updated' });
+    } catch (error) {
+        handleError(res, error);
+    }
+}
+
+static async getCartTotal(req, res) {
+    try {
+        const { cartId } = req.params;
+        const total = await cartModel.calculateTotal(cartId);
+        res.json({ total });
+    } catch (error) {
+        handleError(res, error);
+    }
+}
+
+static async deleteCart(req, res) {
+    try {
+        const { id } = req.params;
+        
+        // Delete cart and all its items
+        await cartModel.deleteCart(id);
+        
+        res.json({ 
+            success: true,
+            message: 'Cart and all items deleted successfully' 
+        });
+    } catch (error) {
+        handleError(res, error);
+    }
+}
+
+
+
 }
 
 export default Cart

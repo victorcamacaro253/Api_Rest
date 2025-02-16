@@ -11,6 +11,20 @@ router.get('/user/:userId',Cart.getCartByUserId)
 
 router.post('/',Cart.createCart)
 
-router.post
+// Clear entire cart
+router.delete('/clear/:cartId', Cart.clearCart)
+
+router.delete('/:id', Cart.deleteCart)
+
+
+// Remove specific item from cart
+router.delete('/items/:cartId/:productId', Cart.removeItem)
+
+// Update item quantity
+router.put('/items/:cartId/:productId', Cart.updateItemQuantity)
+
+// Get cart total
+router.get('/total/:cartId', Cart.getCartTotal)
+
 
 export default router;

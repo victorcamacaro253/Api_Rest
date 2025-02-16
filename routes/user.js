@@ -10,6 +10,15 @@ const router = Router();
 
 //Routes to retrieve data from the database
 
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Retrieve a list of users
+ *     responses:
+ *       200:
+ *         description: A list of users
+ */
 
 //Route to get all users from the database
 router.get('/',User.getAllUsers);
